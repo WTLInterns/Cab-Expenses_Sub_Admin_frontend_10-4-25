@@ -1,148 +1,137 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiEdit, FiTrash2 } from 'react-icons/fi';
 import Sidebar from '../slidebar/page';
 import Image from 'next/image';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
 
 export default function Driver() {
-  const [drivers, setDrivers] = useState([
-    {
-      id: 1,
-      image: '/images/driver1.jpg',
-      name: 'John Doe',
-      email: 'johndoe@example.com',
-      aadharNo: '1234 5678 9012',
-      drivingLicense: 'DL1234567890',
-      vehicleNo: 'MH 12 AB 1234',
-      contact: '9876543210',
-    },
-    {
-      id: 2,
-      image: '/images/driver2.jpg',
-      name: 'Jane Smith',
-      email: 'janesmith@example.com',
-      aadharNo: '9876 5432 1098',
-      drivingLicense: 'DL0987654321',
-      vehicleNo: 'MH 34 CD 5678',
-      contact: '9876543211',
-    },
-  ]);
-
+  const [drivers, setDrivers] = useState([]);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/driver/profile',
+          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
+        setDrivers(res.data);
+      } catch (error) {
+        console.error('Error fetching driver data:', error);
+        toast.error('Failed to fetch driver data.');
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleEdit = (driver) => {
     setFormData({ ...driver });
     setIsEditMode(true);
     setSelectedDriver(driver);
     setErrors({});
+
+
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this driver?')) {
-      setDrivers(drivers.filter((driver) => driver.id !== id));
-      toast.success('Driver deleted successfully!');
+      try {
+        await axios.delete(`http://localhost:5000/api/driver/profile/${id}`,
+          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
+        setDrivers(drivers.filter((driver) => driver._id !== id));
+        toast.success('Driver deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting driver:', error);
+        toast.error('Failed to delete driver.');
+      }
     }
   };
 
-  const validateForm = () => {
-    let tempErrors = {};
+  // const validateForm = () => {
+  //   let tempErrors = {};
 
-    if (!formData.email || !formData.email.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) {
-      tempErrors.email = 'Invalid email format';
-    }
-    if (!formData.aadharNo || !formData.aadharNo.match(/^\d{4} \d{4} \d{4}$/)) {
-      tempErrors.aadharNo = 'Aadhar must be in format: 1234 5678 9012';
-    }
-    if (!formData.vehicleNo || !formData.vehicleNo.match(/^[A-Z]{2} \d{2} [A-Z]{2} \d{4}$/)) {
-      tempErrors.vehicleNo = 'Invalid vehicle number format (e.g., MH 12 AB 1234)';
-    }
-    if (!formData.contact || !formData.contact.match(/^\d{10}$/)) {
-      tempErrors.contact = 'Contact must be 10 digits';
-    }
+  //   if (!formData.email?.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) {
+  //     tempErrors.email = 'Invalid email format';
+  //   }
+  //   if (!formData.adharNo?.match(/^\d{4} \d{4} \d{4}$/)) {
+  //     tempErrors.adharNo = 'Aadhar must be in format: 1234 5678 9012';
+  //   }
+  //   if (!formData.phone?.match(/^\d{10}$/)) {
+  //     tempErrors.phone = 'Contact must be 10 digits';
+  //   }
 
-    setErrors(tempErrors);
-    return Object.keys(tempErrors).length === 0;
-  };
+  //   setErrors(tempErrors);
+  //   return Object.keys(tempErrors).length === 0;
+  // };
 
-  const handleSubmit = () => {
-    if (!validateForm()) return;
-    setDrivers((prevDrivers) =>
-      prevDrivers.map((d) => (d.id === formData.id ? formData : d))
-    );
-    setIsEditMode(false);
-    setSelectedDriver(null);
-    toast.success('Driver details updated successfully!');
+  const handleSubmit = async () => {
+    // if (!validateForm()) return;
+
+    try {
+      await axios.put(`http://localhost:5000/api/driver/profile/${formData._id}`, formData,
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } });
+      setDrivers((prevDrivers) =>
+        prevDrivers.map((d) => (d._id === formData._id ? formData : d))
+      );
+      setIsEditMode(false);
+      setSelectedDriver(null);
+      toast.success('Driver details updated successfully!');
+    } catch (error) {
+      console.error('Error updating driver:', error);
+      toast.error('Failed to update driver.');
+    }
   };
 
   return (
-    /* 
-      We removed "flex-col md:flex-row min-h-screen" 
-      and replaced it with "flex min-h-screen". 
-      This pins the sidebar on the left, and content on the right. 
-    */
     <div className="flex min-h-screen">
       <Sidebar />
 
-      {/* Main Content */}
-      <div className="flex-1 p-4 md:p-6">
+      <div className="flex-1 p-4 md:p-6 bg-gray-800">
         <ToastContainer />
-        <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6">
-          Driver Details
-        </h1>
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6 text-white">Driver Details</h1>
 
-        {/* Single Table for All Screens */}
-        <div className="overflow-x-auto shadow-lg rounded-lg bg-white">
-          <table className="min-w-full table-auto border-collapse border border-gray-300">
-            <thead className="bg-gray-800 text-white">
+        <div className="overflow-x-auto border-white  shadow-lg rounded-lg bg-gray-600">
+          <table className="min-w-full table-auto border-collapse ">
+            <thead className="bg-gray-700 text-white ">
               <tr>
-                <th className="border p-3 whitespace-nowrap">Image</th>
-                <th className="border p-3 whitespace-nowrap">Driver Name</th>
-                <th className="border p-3 whitespace-nowrap">Email</th>
-                <th className="border p-3 whitespace-nowrap">Aadhar No</th>
-                <th className="border p-3 whitespace-nowrap">Driving License</th>
-                <th className="border p-3 whitespace-nowrap">Vehicle No</th>
-                <th className="border p-3 whitespace-nowrap">Contact</th>
-                <th className="border p-3 whitespace-nowrap">Actions</th>
+                <th className=" p-3" >Image</th>
+                <th className="  p-3">Driver Name</th>
+                <th className="  p-3">Email</th>
+                <th className="  p-3">Aadhar No</th>
+                <th className="  p-3">Driving License</th>
+                <th className="  p-3">Contact</th>
+                <th className="  p-3">Actions</th>
               </tr>
             </thead>
             <tbody>
               {drivers.map((driver) => (
-                <tr
-                  key={driver.id}
-                  className="border-b hover:bg-gray-100 transition-all"
-                >
-                  <td className="border p-3 text-center">
+                <tr key={driver._id} className="border-white hover:bg-gray-700 transition-all">
+                  <td className="p-3 text-center  ">
                     <Image
-                      src={driver.image}
+                      src={driver.profileImage || "/images/default-driver.jpg"}
                       alt="Driver"
                       width={50}
                       height={50}
                       className="rounded-full object-cover mx-auto"
+                      unoptimized
                     />
                   </td>
-                  <td className="border p-3 whitespace-nowrap">{driver.name}</td>
-                  <td className="border p-3 whitespace-nowrap">{driver.email}</td>
-                  <td className="border p-3 whitespace-nowrap">{driver.aadharNo}</td>
-                  <td className="border p-3 whitespace-nowrap">{driver.drivingLicense}</td>
-                  <td className="border p-3 whitespace-nowrap">{driver.vehicleNo}</td>
-                  <td className="border p-3 whitespace-nowrap">{driver.contact}</td>
-                  <td className="border p-3 text-center">
-                    <button
-                      onClick={() => handleEdit(driver)}
-                      className="text-yellow-500 hover:text-yellow-700 mx-2"
-                    >
+                  <td className=" p-3 text-white">{driver.name}</td>
+                  <td className=" p-3 text-white">{driver.email}</td>
+                  <td className=" p-3 text-white">{driver.adharNo}</td>
+                  <td className=" p-3 text-white">{driver.licenseNo}</td>
+                  <td className=" p-3 text-white">{driver.phone}</td>
+                  <td className=" p-3 text-white text-center">
+                    <button onClick={() => handleEdit(driver)} className="text-yellow-500 hover:text-yellow-700 mx-2">
                       <FiEdit size={20} />
                     </button>
-                    <button
-                      onClick={() => handleDelete(driver.id)}
-                      className="text-red-500 hover:text-red-700 mx-2"
-                    >
+                    <button onClick={() => handleDelete(driver._id)} className="text-red-500 hover:text-red-700 mx-2">
                       <FiTrash2 size={20} />
                     </button>
                   </td>
@@ -152,72 +141,56 @@ export default function Driver() {
           </table>
         </div>
 
-        {/* Edit Modal */}
-        {selectedDriver && (
-          <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 p-4 z-50">
-            <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
-              <h2 className="text-xl font-semibold mb-4">Edit Driver</h2>
-
-              <label className="font-semibold">Driving License</label>
-              <input
-                type="text"
-                value={formData.drivingLicense}
-                disabled
-                className="border p-2 rounded w-full mb-2"
-              />
-
-              <label className="font-semibold">Email</label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                className="border p-2 rounded w-full mb-2"
-              />
-              {errors.email && <p className="text-red-500">{errors.email}</p>}
-
-              <label className="font-semibold">Aadhar No</label>
-              <input
-                type="text"
-                value={formData.aadharNo}
-                onChange={(e) =>
-                  setFormData({ ...formData, aadharNo: e.target.value })
-                }
-                className="border p-2 rounded w-full mb-2"
-              />
-              {errors.aadharNo && <p className="text-red-500">{errors.aadharNo}</p>}
-
-              <label className="font-semibold">Vehicle No</label>
-              <input
-                type="text"
-                value={formData.vehicleNo}
-                onChange={(e) =>
-                  setFormData({ ...formData, vehicleNo: e.target.value })
-                }
-                className="border p-2 rounded w-full mb-2"
-              />
-              {errors.vehicleNo && <p className="text-red-500">{errors.vehicleNo}</p>}
-
-              <label className="font-semibold">Contact</label>
-              <input
-                type="text"
-                value={formData.contact}
-                onChange={(e) =>
-                  setFormData({ ...formData, contact: e.target.value })
-                }
-                className="border p-2 rounded w-full mb-2"
-              />
-              {errors.contact && <p className="text-red-500">{errors.contact}</p>}
-
+        {isEditMode && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-gray-800 text-white rounded-md w-full max-w-md p-6 relative">
+            <button
+              className="absolute top-3 right-3 text-gray-300 hover:text-white transition-all duration-300"
+              onClick={() => setIsEditMode(false)}
+            >
+              &times;
+            </button>
+            <h2 className="text-2xl font-semibold mb-4">Edit Driver</h2>
+            <div className="space-y-4">
+              {[
+                { label: "Driver Name", field: "name" },
+                { label: "Email", field: "email", type: "email" },
+                { label: "Aadhar No", field: "adharNo" },
+                { label: "Driving License", field: "licenseNo", disabled: true },
+                { label: "Contact", field: "phone" },
+              ].map(({ label, field, type = "text", disabled = false }) => (
+                <div key={field}>
+                  <label className="block text-sm font-medium mb-1">{label}</label>
+                  <input
+                    type={type}
+                    value={formData[field] || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, [field]: e.target.value })
+                    }
+                    className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-white transition-all duration-300 hover:scale-105"
+                    disabled={disabled}
+                  />
+                  {errors[field] && <p className="text-red-500">{errors[field]}</p>}
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                onClick={() => setIsEditMode(false)}
+                className="px-4 py-2 border border-gray-600 rounded-md hover:bg-gray-700 transition-all duration-300"
+              >
+                Cancel
+              </button>
               <button
                 onClick={handleSubmit}
-                className="bg-green-500 text-white px-4 py-2 rounded w-full"
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-all duration-300"
               >
                 Save
               </button>
             </div>
           </div>
+        </div>
+        
         )}
       </div>
     </div>
