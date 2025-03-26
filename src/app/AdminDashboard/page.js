@@ -90,10 +90,10 @@ const AdminDashboard = () => {
     ];
 
     return (
-        <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 min-h-screen flex text-white">
+        <div className="bg-gradient-to-r  from-gray-900 via-gray-800 to-gray-900 min-h-screen flex text-white">
             <Sidebar />
 
-            <div className="p-8 flex-1">
+            <div className="p-8 mt-20 sm:mt-0 flex-1">
                 <motion.h1
                     className="text-3xl font-bold mb-6 text-center text-gray-200"
                     initial={{ opacity: 0, y: -20 }}
@@ -103,7 +103,7 @@ const AdminDashboard = () => {
                     Admin Dashboard
                 </motion.h1>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div className="grid grid-cols-1   md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                     {[
                         { label: 'Total Drivers', value: stats.totalDrivers, icon: <MdPerson size={28} /> },
                         { label: 'Total Cabs', value: stats.totalCabs, icon: <MdOutlineDirectionsCar size={28} /> },

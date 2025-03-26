@@ -150,7 +150,7 @@ const AddCab = () => {
                                 type="file"
                                 name="cabImage"
                                 accept="image/*"
-                                className="w-full bg-gray-700 text-white p-3 border border-gray-500 rounded-lg focus:ring-2 focus:ring-white-400"
+                                className="w-full bg-gray-700 text-white p-3 pl-10 border border-gray-500 rounded-lg focus:ring-2 focus:ring-white-400"
                                 onChange={handleChange}
                             />
                             {errors.cabImage && <p className="text-white text-sm mt-1">{errors.cabImage}</p>}

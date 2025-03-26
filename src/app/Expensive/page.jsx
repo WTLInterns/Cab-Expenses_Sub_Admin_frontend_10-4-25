@@ -1,18 +1,26 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from "react";
-import Sidebar from "../slidebar/page";
+import { useState, useEffect } from "react"
+import Sidebar from "../slidebar/page"
 
 const CabExpenses = () => {
-  const [expenses, setExpenses] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [expenses, setExpenses] = useState([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [fromDate, setFromDate] = useState("")
+  const [toDate, setToDate] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  // ✅ Fetch expenses (All or Filtered)
-  const fetchExpenses = async (cabNumber = "") => {
+  const fetchExpenses = async (cabNumber = "", dateFilter = {}) => {
+    setLoading(true)
     try {
-      const url = cabNumber
-        ? `http://localhost:5000/api/cabs/cabExpensive?cabNumber=${cabNumber}`
-        : `http://localhost:5000/api/cabs/cabExpensive`;
+      let url = "http://localhost:5000/api/cabs/cabExpensive"
+      const params = new URLSearchParams()
+
+      if (cabNumber) params.append("cabNumber", cabNumber)
+      if (dateFilter.fromDate) params.append("fromDate", dateFilter.fromDate)
+      if (dateFilter.toDate) params.append("toDate", dateFilter.toDate)
+
+      if (params.toString()) url += `?${params.toString()}`
 
       const response = await fetch(url, {
         method: "GET",
@@ -20,93 +28,201 @@ const CabExpenses = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-      });
+      })
 
-      const data = await response.json();
-
-      console.log(data);
+      const data = await response.json()
       if (response.ok) {
-        setExpenses(data.data);
+        setExpenses(data.data)
       } else {
-        setExpenses([]);
+        setExpenses([])
       }
     } catch (error) {
-      console.error("Error fetching expenses:", error);
+      console.error("Error fetching expenses:", error)
+    } finally {
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchExpenses(); // Fetch all expenses on mount
-  }, []);
+    fetchExpenses()
+  }, [])
 
-  // ✅ Handle Search
   const handleSearch = (e) => {
-    e.preventDefault();
-    fetchExpenses(searchQuery.trim());
-  };
+    e.preventDefault()
+    fetchExpenses(searchQuery.trim())
+    setFromDate("")
+    setToDate("")
+  }
+
+  const handleDateFilter = () => {
+    if (!fromDate || !toDate) {
+      alert("Please select both start and end dates")
+      return
+    }
+    setSearchQuery("")
+    fetchExpenses("", { fromDate, toDate })
+  }
 
   return (
-    <div className="flex bg-gray-800">
+    <div className="flex min-h-screen bg-gray-800">
       {/* Sidebar */}
       <Sidebar />
 
-      {/* Main Content */}
-      <div className="p-6 flex-1 text-white">
-        <h1 className="text-2xl font-bold mb-4">Cab Expenses</h1>
+      {/* Main Content - Adjusted for sidebar width */}
+      <div className="flex-1 p-4 md:p-6 text-white mt-20 sm:mt-0  transition-all duration-300">
+        <h1 className="text-xl md:text-2xl font-bold mb-4">Cab Expenses</h1>
 
-        {/* Search Bar */}
-        <form onSubmit={handleSearch} className="mb-4 flex items-center gap-2">
-          <input
-            type="text"
-            placeholder="Search by Cab Number"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="border p-2 rounded w-64"
-          />
-          <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
-            Search
-          </button>
-        </form>
+        {/* Search and Filter Section */}
+        <div className="space-y-4 mb-6">
+          {/* Search Bar */}
+          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              placeholder="Search by Cab Number"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="border p-2 rounded w-full sm:w-64 text-white"
+            />
+            <button 
+              type="submit" 
+              className=" bg-indigo-600  hover:bg-indigo-700 text-white px-4 py-2 rounded whitespace-nowrap transition-colors"
+              disabled={loading}
+            >
+              {loading ? 'Searching...' : 'Search'}
+            </button>
+          </form>
 
-        {/* Expenses Table */}
-        <div className="bg-gray-600 shadow-lg rounded-lg p-4 overflow-x-auto  ">
-          <table className="w-full border border-gray-300 rounded-lg overflow-hidden  ">
-            <thead>
-              <tr className="bg-gray-700 text-white ">
-                <th className="p-3 border">Cab Number</th>
-                <th className="p-3 border">Breakdown</th>
-                <th className="p-3 border">Total Expense (₹)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {expenses.length > 0 ? (
-                expenses.map((cab) => (
-                  <tr key={cab.cabNumber} className="text-white bg-gray-600 hover:bg-gray-500">
-                    <td className="p-3 border">{cab.cabNumber}</td>
-                    <td className="p-3 border text-sm">
-                      <ul>
-                        <li>Fuel: ₹{cab.breakdown?.fuel || 0}</li>
-                        <li>FastTag: ₹{cab.breakdown?.fastTag || 0}</li>
-                        <li>Tyre Repair: ₹{cab.breakdown?.tyrePuncture || 0}</li>
-                        <li>Other: ₹{cab.breakdown?.otherProblems || 0}</li>
-                      </ul>
-                    </td>
-                    <td className="p-3 border">₹{cab.totalExpense}</td>
+          {/* Date Filter */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+              <span className="whitespace-nowrap">From:</span>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="border p-2 rounded text-white w-full sm:w-auto"
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+              <span className="whitespace-nowrap">To:</span>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="border p-2 rounded text-white w-full sm:w-auto"
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button 
+                onClick={handleDateFilter} 
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded whitespace-nowrap transition-colors"
+              >
+                Filter by Date
+              </button>
+              <button
+                onClick={() => {
+                  setFromDate("")
+                  setToDate("")
+                  setSearchQuery("")
+                  fetchExpenses()
+                }}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded whitespace-nowrap transition-colors"
+              >
+                Reset Filters
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Loading State */}
+        {loading ? (
+          <div className="animate-pulse space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="bg-gray-700 h-16 rounded-md"></div>
+            ))}
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-gray-700 shadow-lg rounded-lg overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-800 text-white">
+                    <th className="p-3 text-left">Cab Number</th>
+                    <th className="p-3 text-left">Date</th>
+                    <th className="p-3 text-left">Breakdown</th>
+                    <th className="p-3 text-left">Total (₹)</th>
                   </tr>
+                </thead>
+                <tbody>
+                  {expenses.length > 0 ? (
+                    expenses.map((cab, index) => (
+                      <tr key={`${cab.cabNumber}-${index}`} className="border-b border-gray-600 hover:bg-gray-600 transition-colors">
+                        <td className="p-3 font-medium">{cab.cabNumber}</td>
+                        <td className="p-3">{cab.date ? new Date(cab.date).toLocaleDateString() : "N/A"}</td>
+                        <td className="p-3 text-sm">
+                          <ul className="space-y-1">
+                            <li>Fuel: ₹{cab.breakdown?.fuel || 0}</li>
+                            <li>FastTag: ₹{cab.breakdown?.fastTag || 0}</li>
+                            <li>Tyre: ₹{cab.breakdown?.tyrePuncture || 0}</li>
+                            <li>Other: ₹{cab.breakdown?.otherProblems || 0}</li>
+                          </ul>
+                        </td>
+                        <td className="p-3 font-medium">₹{cab.totalExpense}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4" className="p-4 text-center text-white">
+                        No expenses found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3">
+              {expenses.length > 0 ? (
+                expenses.map((cab, index) => (
+                  <div key={`${cab.cabNumber}-${index}`} className="bg-gray-700 p-4 rounded-lg shadow">
+                    <div className="grid grid-cols-2 gap-4 mb-3">
+                      <div>
+                        <p className="text-gray-400 text-sm">Cab Number</p>
+                        <p className="font-medium">{cab.cabNumber}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">Date</p>
+                        <p>{cab.date ? new Date(cab.date).toLocaleDateString() : "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-400 text-sm">Total</p>
+                        <p className="font-medium">₹{cab.totalExpense}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm mb-1">Breakdown</p>
+                      <div className="bg-gray-800 p-3 rounded">
+                        <p>Fuel: ₹{cab.breakdown?.fuel || 0}</p>
+                        <p>FastTag: ₹{cab.breakdown?.fastTag || 0}</p>
+                        <p>Tyre: ₹{cab.breakdown?.tyrePuncture || 0}</p>
+                        <p>Other: ₹{cab.breakdown?.otherProblems || 0}</p>
+                      </div>
+                    </div>
+                  </div>
                 ))
               ) : (
-                <tr>
-                  <td colSpan="3" className="p-4 text-center text-gray-600">
-                    No expenses found
-                  </td>
-                </tr>
+                <div className="p-4 text-center text-white bg-gray-700 rounded-lg">
+                  No expenses found
+                </div>
               )}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default CabExpenses;
+export default CabExpenses
