@@ -12,7 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "next": "latest",
+    "next": "^15.2.2",
     "nextjs-login-app": "file:",
     "react": "latest",
     "react-dom": "latest",

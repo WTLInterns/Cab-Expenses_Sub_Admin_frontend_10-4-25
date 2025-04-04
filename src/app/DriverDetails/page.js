@@ -41,7 +41,7 @@ export default function Driver() {
   const [addDriverFormData, setAddDriverFormData] = useState({
     name: "",
     email: "",
-    password: "",
+    // password: "",
     phone: "",
     licenseNo: "",
     adharNo: "",
@@ -139,8 +139,8 @@ export default function Driver() {
     if (!addDriverFormData.name.trim()) newErrors.name = "Name is required"
     if (!addDriverFormData.email.trim()) newErrors.email = "Email is required"
     else if (!/\S+@\S+\.\S+/.test(addDriverFormData.email)) newErrors.email = "Invalid email format"
-    if (!addDriverFormData.password.trim()) newErrors.password = "Password is required"
-    else if (addDriverFormData.password.length < 6) newErrors.password = "Password must be at least 6 characters"
+    // if (!addDriverFormData.password.trim()) newErrors.password = "Password is required"
+    // else if (addDriverFormData.password.length < 6) newErrors.password = "Password must be at least 6 characters"
     if (!addDriverFormData.phone.trim()) newErrors.phone = "Phone is required"
     else if (!/^\d{10}$/.test(addDriverFormData.phone)) newErrors.phone = "Phone must be 10 digits"
     if (!addDriverFormData.licenseNo.trim()) newErrors.licenseNo = "License No is required"
@@ -159,19 +159,23 @@ export default function Driver() {
     setAddDriverLoading(true)
 
     try {
-      const formDataToSend = new FormData()
+      const formDataToSend = new FormData();
+
       Object.keys(addDriverFormData).forEach((key) => {
-        formDataToSend.append(key, addDriverFormData[key])
-      })
+        formDataToSend.append(key, addDriverFormData[key]);
+      });
       formDataToSend.append("profileImage", profileImage)
 
-      const response = await fetch("http://localhost:5000/api/register", {
-        method: "POST",
-        body: formDataToSend,
+      console.log(addDriverFormData)
+
+      const response = await fetch('http://localhost:5000/api/register', {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          // 'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem("token")}` // Add this if using JWT
         },
-      })
+        body: formDataToSend
+      });
 
       const data = await response.json()
 
@@ -180,7 +184,7 @@ export default function Driver() {
         setAddDriverFormData({
           name: "",
           email: "",
-          password: "",
+          // password: "",
           phone: "",
           licenseNo: "",
           adharNo: "",
@@ -243,6 +247,7 @@ export default function Driver() {
                     <th className="p-3">License</th>
                     <th className="p-3">Contact</th>
                     <th className="p-3">Actions</th>
+
                   </tr>
                 </thead>
                 <tbody>
@@ -402,7 +407,7 @@ export default function Driver() {
                   {[
                     { name: "name", icon: FiUser, placeholder: "Name" },
                     { name: "email", icon: FiMail, placeholder: "Email", type: "email" },
-                    { name: "password", icon: FiLock, placeholder: "Password", type: "password" },
+                    // { name: "password", icon: FiLock, placeholder: "Password", type: "password" },
                     { name: "phone", icon: FiPhone, placeholder: "Phone" },
                     { name: "licenseNo", icon: FiCreditCard, placeholder: "License No" },
                     { name: "adharNo", icon: FiFileText, placeholder: "Aadhar No" },

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import Sidebar from "../slidebar/page"
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const CabExpenses = () => {
   const [expenses, setExpenses] = useState([])
@@ -9,6 +11,49 @@ const CabExpenses = () => {
   const [fromDate, setFromDate] = useState("")
   const [toDate, setToDate] = useState("")
   const [loading, setLoading] = useState(false)
+
+  const exportToExcel = () => {
+    if (expenses.length === 0) {
+      alert("No data to export!");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // ✅ Format Data to match the table
+      const formattedData = expenses.map((cab, index) => ({
+        ID: index + 1,
+        "Cab Number": cab.cabNumber || "N/A",
+        "Date": cab.date ? new Date(cab.date).toLocaleDateString() : "N/A",
+        "Fuel (₹)": cab.breakdown?.fuel || 0,
+        "FastTag (₹)": cab.breakdown?.fastTag || 0,
+        "Tyre Repair (₹)": cab.breakdown?.tyrePuncture || 0,
+        "Other Expenses (₹)": cab.breakdown?.otherProblems || 0,
+        "Total Expense (₹)": cab.totalExpense,
+      }));
+
+      // ✅ Convert JSON to Worksheet
+      const worksheet = XLSX.utils.json_to_sheet(formattedData);
+
+      // ✅ Create Workbook and add Worksheet
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Cab Expenses");
+
+      // ✅ Convert to Blob & Trigger Download
+      const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+      const data = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+
+      saveAs(data, "CabExpenses.xlsx");
+
+      alert("Export successful!");
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      alert("Failed to export data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchExpenses = async (cabNumber = "", dateFilter = {}) => {
     setLoading(true)
@@ -83,8 +128,8 @@ const CabExpenses = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="border p-2 rounded w-full sm:w-64 text-white"
             />
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className=" bg-indigo-600  hover:bg-indigo-700 text-white px-4 py-2 rounded whitespace-nowrap transition-colors"
               disabled={loading}
             >
@@ -113,8 +158,8 @@ const CabExpenses = () => {
               />
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
-              <button 
-                onClick={handleDateFilter} 
+              <button
+                onClick={handleDateFilter}
                 className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded whitespace-nowrap transition-colors"
               >
                 Filter by Date
@@ -129,6 +174,13 @@ const CabExpenses = () => {
                 className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded whitespace-nowrap transition-colors"
               >
                 Reset Filters
+              </button>
+              <button
+                onClick={exportToExcel}
+                disabled={loading}
+                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 disabled:opacity-50"
+              >
+                {loading ? "Exporting..." : "Export to Excel"}
               </button>
             </div>
           </div>
