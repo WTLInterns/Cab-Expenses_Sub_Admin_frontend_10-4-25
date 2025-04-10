@@ -59,7 +59,7 @@ const CabService = () => {
       <Sidebar />
 
       {/* Main Content - Adjusted for sidebar width changes */}
-      <div className="flex-1 p-4 md:p-6 text-white mt-20 sm:mt-0   transition-all duration-300">
+      <div className="flex-1 md:ml-60 p-4 md:p-6 text-white mt-20 sm:mt-0   transition-all duration-300">
         <h1 className="text-xl md:text-2xl font-bold mb-4">Cabs with Distance &gt; 10,000 KM</h1>
 
         {error && <p className="text-red-500 mb-4">Error: {error}</p>}

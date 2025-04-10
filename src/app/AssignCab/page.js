@@ -285,7 +285,7 @@ export default function AssignCab() {
 
       {/* Add Cab Modal */}
       {showAddCabForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-gradient-to-b bg-black/50 to-transparent backdrop-blur-md  flex items-center justify-center z-50 p-4">
           <motion.div
             className="bg-gray-800 border border-gray-700 rounded-lg p-6 w-full max-w-md"
             initial={{ scale: 0.9, opacity: 0 }}

@@ -1,3 +1,7 @@
+
+
+
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -7,13 +11,13 @@ import {
   FiUserPlus,
   FiUser,
   FiMail,
-  FiLock,
   FiPhone,
   FiCreditCard,
   FiFileText,
   FiImage,
   FiX,
 } from "react-icons/fi"
+import { IoIosContact } from "react-icons/io";
 import Sidebar from "../slidebar/page"
 import Image from "next/image"
 import { ToastContainer, toast } from "react-toastify"
@@ -21,8 +25,11 @@ import "react-toastify/dist/ReactToastify.css"
 import axios from "axios"
 import { motion } from "framer-motion"
 
-export default function Driver() {
+const Driver = () => {
   // Driver list state
+  const [profileImageName, setProfileImageName] = useState('');
+  const [licenseImageName, setLicenseImageName] = useState('');
+  const [adharImageName, setAdharImageName] = useState('');
   const [drivers, setDrivers] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedDriver, setSelectedDriver] = useState(null)
@@ -48,8 +55,20 @@ export default function Driver() {
     addedBy: "",
   })
   const [profileImage, setProfileImage] = useState(null)
+  const [licenseImage, setLicenseImage] = useState(null)
+  const [adharImage, setAdharImage] = useState(null)
   const [addDriverErrors, setAddDriverErrors] = useState({})
   const [addDriverLoading, setAddDriverLoading] = useState(false)
+
+  // to show images
+  const [modalImage, setModalImage] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+
+  const handleImageClick = (imageUrl) => {
+    setModalImage(imageUrl);
+    setShowModal(true);
+  };
+
 
   useEffect(() => {
     fetchDrivers()
@@ -76,7 +95,7 @@ export default function Driver() {
       setDrivers(res.data)
     } catch (error) {
       console.error("Error fetching driver data:", error)
-      toast.error("Failed to fetch driver data.")
+      toast.error("There is no any driver data .")
     } finally {
       setLoading(false)
     }
@@ -129,10 +148,32 @@ export default function Driver() {
     setAddDriverErrors({ ...addDriverErrors, [e.target.name]: "" })
   }
 
+  // const handleImageChange = (e) => {
+  // setProfileImage(e.target.files[0])
+  // setAddDriverErrors({ ...addDriverErrors, profileImage: "" })
+  // }
+
   const handleImageChange = (e) => {
+    const file = e.target.files[0];
     setProfileImage(e.target.files[0])
     setAddDriverErrors({ ...addDriverErrors, profileImage: "" })
+    if (file) {
+      setProfileImageName(file.name);
+    }
   }
+  const handleLicenseImageChange = (e) => {
+    const file = e.target.files[0];
+    setLicenseImage(e.target.files[0])
+    setAddDriverErrors({ ...addDriverErrors, licenseImage: "" })
+    if (file) setLicenseImageName(file.name);
+  };
+
+  const handleAdharImageChange = (e) => {
+    const file = e.target.files[0];
+    setAdharImage(e.target.files[0])
+    setAddDriverErrors({ ...addDriverErrors, adharImage: "" })
+    if (file) setAdharImageName(file.name);
+  };
 
   const validateAddDriverForm = () => {
     const newErrors = {}
@@ -147,6 +188,8 @@ export default function Driver() {
     if (!addDriverFormData.adharNo.trim()) newErrors.adharNo = "Aadhar No is required"
     if (!addDriverFormData.addedBy) newErrors.addedBy = "Admin ID is missing"
     if (!profileImage) newErrors.profileImage = "Profile image is required"
+    if (!licenseImage) newErrors.licenseImage = "License image is required"
+    if (!adharImage) newErrors.adharImage = "Aadhar image is required"
 
     setAddDriverErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -159,23 +202,25 @@ export default function Driver() {
     setAddDriverLoading(true)
 
     try {
-      const formDataToSend = new FormData();
+      const formDataToSend = new FormData()
 
       Object.keys(addDriverFormData).forEach((key) => {
-        formDataToSend.append(key, addDriverFormData[key]);
-      });
+        formDataToSend.append(key, addDriverFormData[key])
+      })
+
       formDataToSend.append("profileImage", profileImage)
+      formDataToSend.append("licenseNoImage", licenseImage)
+      formDataToSend.append("adharNoImage", adharImage)
 
-      console.log(addDriverFormData)
 
-      const response = await fetch('http://localhost:5000/api/register', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5000/api/register", {
+        method: "POST",
         headers: {
-          // 'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem("token")}` // Add this if using JWT
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          // ❌ Don't set 'Content-Type', let the browser set it for FormData
         },
-        body: formDataToSend
-      });
+        body: formDataToSend,
+      })
 
       const data = await response.json()
 
@@ -191,8 +236,16 @@ export default function Driver() {
           addedBy: localStorage.getItem("id") || "",
         })
         setProfileImage(null)
-        if (document.getElementById("fileInput")) {
-          document.getElementById("fileInput").value = ""
+        if (document.getElementById("profileInput")) {
+          document.getElementById("profileInput").value = ""
+        }
+        setLicenseImage(null)
+        if (document.getElementById("licenseInput")) {
+          document.getElementById("licenseInput").value = ""
+        }
+        setAdharImage(null)
+        if (document.getElementById("adharInput")) {
+          document.getElementById("adharInput").value = ""
         }
 
         // Close modal and refresh driver list
@@ -211,10 +264,10 @@ export default function Driver() {
   }
 
   return (
-    <div className="flex min-h-screen  bg-gray-800">
+    <div className="flex min-h-screen bg-gray-800">
       <Sidebar />
 
-      <div className="flex-1 p-4 md:p-6 mt-20 sm:mt-0 transition-all duration-300">
+      <div className="flex-1 p-4 md:p-6 md:ml-60 mt-20 sm:mt-0 transition-all duration-300">
         <ToastContainer />
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white">Driver Details</h1>
@@ -244,10 +297,11 @@ export default function Driver() {
                     <th className="p-3">Driver Name</th>
                     <th className="p-3">Email</th>
                     <th className="p-3">Aadhar No</th>
+                    <th className="p-3">Adhar Image</th>
                     <th className="p-3">License</th>
+                    <th className="p-3">License Image</th>
                     <th className="p-3">Contact</th>
                     <th className="p-3">Actions</th>
-
                   </tr>
                 </thead>
                 <tbody>
@@ -261,12 +315,36 @@ export default function Driver() {
                           height={50}
                           className="rounded-full object-cover mx-auto"
                           unoptimized
+                          onClick={() => handleImageClick(driver.profileImage)} // pass correct image
+
                         />
                       </td>
                       <td className="p-3 text-white">{driver.name}</td>
                       <td className="p-3 text-white">{driver.email}</td>
                       <td className="p-3 text-white">{driver.adharNo}</td>
+                      <td className="p-3 text-center">
+                        <Image
+                          src={driver.adharNoImage || "/images/default-driver.jpg"}
+                          alt="Adhar Card"
+                          width={50}
+                          height={50}
+                          className="rounded object-cover mx-auto"
+                          unoptimized
+                          onClick={() => handleImageClick(driver.adharNoImage)} // pass correct image
+                        />
+                      </td>
                       <td className="p-3 text-white">{driver.licenseNo}</td>
+                      <td className="p-3 text-center">
+                        <Image
+                          src={driver.licenseNoImage || "/images/default-driver.jpg"}
+                          alt="License"
+                          width={50}
+                          height={50}
+                          className="rounded object-cover mx-auto"
+                          unoptimized
+                          onClick={() => handleImageClick(driver.licenseNoImage)} // pass correct image
+                        />
+                      </td>
                       <td className="p-3 text-white">{driver.phone}</td>
                       <td className="p-3 text-white text-center">
                         <button onClick={() => handleEdit(driver)} className="bg-blue-600 p-2 rounded-full mx-2">
@@ -314,13 +392,42 @@ export default function Driver() {
                       <p className="text-white">{driver.phone}</p>
                     </div>
                   </div>
-                  <div className="flex justify-end space-x-2 mt-3">
-                    <button onClick={() => handleEdit(driver)} className="p-2 bg-blue-600 rounded-full text-white">
-                      <FiEdit size={16} />
-                    </button>
-                    <button onClick={() => handleDelete(driver._id)} className="p-2 bg-red-600 rounded-full text-white">
-                      <FiTrash2 size={16} />
-                    </button>
+                  <div className="flex justify-between mt-3">
+                    <div className="flex space-x-2">
+                      <div>
+                        <p className="text-gray-400 mb-1">License Image</p>
+                        <Image
+                          src={driver.licenseNoImage || "/images/default-driver.jpg"}
+                          alt="License"
+                          width={60}
+                          height={60}
+                          className="rounded object-cover"
+                          unoptimized
+                        />
+                      </div>
+                      <div>
+                        <p className="text-gray-400 mb-1">Adhar Image</p>
+                        <Image
+                          src={driver.adharNoImage || "/images/default-driver.jpg"}
+                          alt="Adhar Card"
+                          width={60}
+                          height={60}
+                          className="rounded object-cover"
+                          unoptimized
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col space-y-2">
+                      <button onClick={() => handleEdit(driver)} className="p-2 bg-blue-600 rounded-full text-white">
+                        <FiEdit size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(driver._id)}
+                        className="p-2 bg-red-600 rounded-full text-white"
+                      >
+                        <FiTrash2 size={16} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -377,9 +484,28 @@ export default function Driver() {
           </div>
         )}
 
+        {/* //show image model */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 bg-black/50 to-transparent backdrop-blur-md">
+            <div className="bg-white rounded-lg p-4 max-w-md w-full relative">
+              <button
+                className="absolute top-2 right-2 text-gray-700 font-bold text-lg"
+                onClick={() => setShowModal(false)}
+              >
+                ✕
+              </button>
+              <img
+                src={modalImage}
+                alt="Preview"
+                className="w-full h-[400px] object-contain rounded-lg border-4 border-gray-300 shadow-lg"
+              />
+            </div>
+          </div>
+        )}
+
         {/* Add Driver Modal */}
         {isAddDriverModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-b bg-black/50 to-transparent backdrop-blur-md p-4">
             <motion.div
               className="bg-gray-800 border border-gray-700 rounded-lg w-full max-w-3xl shadow-2xl overflow-auto max-h-[90vh]"
               initial={{ opacity: 0, scale: 0.9 }}
@@ -432,17 +558,82 @@ export default function Driver() {
 
                   <div className="col-span-1 md:col-span-2 relative">
                     <span className="absolute left-3 top-3 text-gray-400">
-                      <FiImage />
+
                     </span>
+                    <label
+                      htmlFor="profileInput"
+                      className="flex items-center gap-2 w-full p-3 pl-4 bg-gray-700 text-white border border-gray-600 rounded-lg cursor-pointer hover:bg-gray-600 focus:ring-2 focus:ring-indigo-400"
+                    >
+                      <FiImage className="text-xl" />
+                      Driver Profile Image
+                      {profileImageName && (
+                        <span className="ml-auto text-sm text-gray-300 truncate">{profileImageName}</span>
+                      )}
+                    </label>
                     <input
                       type="file"
-                      id="fileInput"
+                      id="profileInput"
                       accept="image/*"
                       onChange={handleImageChange}
-                      className="w-full p-3 pl-10 bg-gray-700 text-white border border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-400"
+                      className="hidden"
                     />
                     {addDriverErrors.profileImage && (
                       <p className="text-red-400 text-sm mt-1">{addDriverErrors.profileImage}</p>
+                    )}
+                  </div>
+
+
+
+                  <div className="col-span-1 md:col-span-2 relative">
+                    <span className="absolute left-3 top-3 text-gray-400"></span>
+                    <div className="relative w-full">
+                      <label
+                        htmlFor="licenseInput"
+                        className="flex items-center gap-2 w-full p-3 pl-4 bg-gray-700 text-white border border-gray-600 rounded-lg cursor-pointer hover:bg-gray-600 focus:ring-2 focus:ring-indigo-400"
+                      >
+                        <FiImage className="text-xl" />
+                        License Image
+                        {licenseImageName && (
+                          <span className="ml-auto text-sm text-gray-300 truncate">{licenseImageName}</span>
+                        )}
+                      </label>
+                      <input
+                        type="file"
+                        id="licenseInput"
+                        accept="image/*"
+                        onChange={handleLicenseImageChange}
+                        className="hidden"
+                      />
+                    </div>
+
+                    {addDriverErrors.licenseImage && (
+                      <p className="text-red-400 text-sm mt-1">{addDriverErrors.licenseImage}</p>
+                    )}
+                  </div>
+
+                  {/* Adhar Image */}
+                  <div className="col-span-1 md:col-span-2 relative">
+                    <span className="absolute left-3 top-3 text-gray-400">    </span>
+                    <label
+                      htmlFor="adharInput"
+                      className="flex items-center gap-2 w-full p-3 pl-4 bg-gray-700 text-white border border-gray-600 rounded-lg cursor-pointer hover:bg-gray-600 focus:ring-2 focus:ring-indigo-400"
+                    >
+                      <FiImage className="text-xl" />
+                      Aadhaar Image
+                      {adharImageName && (
+                        <span className="ml-auto text-sm text-gray-300 truncate">{adharImageName}</span>
+                      )}
+                    </label>
+                    <input
+                      type="file"
+                      id="adharInput"
+                      accept="image/*"
+                      onChange={handleAdharImageChange}
+                      className="hidden"
+                    />
+
+                    {addDriverErrors.adharImage && (
+                      <p className="text-red-400 text-sm mt-1">{addDriverErrors.adharImage}</p>
                     )}
                   </div>
 
@@ -471,4 +662,4 @@ export default function Driver() {
     </div>
   )
 }
-
+export default Driver
