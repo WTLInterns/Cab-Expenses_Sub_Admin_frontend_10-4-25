@@ -1,13 +1,9 @@
-'use client';
-import {
-  Document,
-  Page,
-  Text,
-  View,
-  Image,
-  StyleSheet,
-} from "@react-pdf/renderer";
-import { toWords } from "number-to-words";
+
+
+
+
+import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer"
+import { toWords } from "number-to-words"
 
 const styles = StyleSheet.create({
   page: {
@@ -122,38 +118,70 @@ const styles = StyleSheet.create({
   },
   signBox: {
     width: 120,
-    marginTop:30,
+    marginTop: 30,
     height: 80,
   },
-});
+})
 
 const numberToWords = (amount) => {
-  return (
-    toWords(amount).replace(/\b\w/g, (l) => l.toUpperCase()) +
-    " Rupees Only"
-  );
-};
+  try {
+    // Handle decimal part properly
+    const integerPart = Math.floor(amount)
+    return toWords(integerPart).replace(/\b\w/g, (l) => l.toUpperCase()) + " Rupees Only"
+  } catch (error) {
+    console.error("Error converting number to words:", error)
+    return "Amount in words unavailable"
+  }
+}
 
 const InvoicePDF = ({
   trip,
+  cabExpense,
   companyLogo,
   invoiceNumber,
   signature,
   companyInfo,
   companyPrefix,
   companyName,
-  invoiceDate
+  invoiceDate,
 }) => {
-  if (!trip || !trip.cab) return null;
+  if (!trip || !trip.cab) return null
 
-  const fuelAmount = trip?.cab?.fuel?.amount || 0;
-  const fastTagAmount = trip?.cab?.fastTag?.amount || 0;
-  const tyreAmount = trip?.cab?.tyrePuncture?.repairAmount || 0;
-  const otherAmount = trip?.cab?.otherProblems?.amount || 0;
+  // First try to use the cabExpense data from the API if available
+  let fuelAmount = 0
+  let fastTagAmount = 0
+  let tyreAmount = 0
+  let otherAmount = 0
 
-  const subtotal = fuelAmount + fastTagAmount + tyreAmount + otherAmount;
-  const gst = subtotal * 0.05;
-  const totalAmount = subtotal + gst;
+  if (cabExpense && cabExpense.breakdown) {
+    // Use the expense data from the API
+    fuelAmount = Number(cabExpense.breakdown.fuel || 0)
+    fastTagAmount = Number(cabExpense.breakdown.fastTag || 0)
+    tyreAmount = Number(cabExpense.breakdown.tyrePuncture || 0)
+    otherAmount = Number(cabExpense.breakdown.otherProblems || 0)
+  } else {
+    // Fall back to calculating from the trip data
+    // Safely extract amounts with fallbacks to 0
+    fuelAmount = Array.isArray(trip?.cab?.fuel?.amount)
+      ? trip.cab.fuel.amount.reduce((sum, amt) => sum + (Number(amt) || 0), 0)
+      : Number(trip?.cab?.fuel?.amount || 0)
+
+    fastTagAmount = Array.isArray(trip?.cab?.fastTag?.amount)
+      ? trip.cab.fastTag.amount.reduce((sum, amt) => sum + (Number(amt) || 0), 0)
+      : Number(trip?.cab?.fastTag?.amount || 0)
+
+    tyreAmount = Array.isArray(trip?.cab?.tyrePuncture?.repairAmount)
+      ? trip.cab.tyrePuncture.repairAmount.reduce((sum, amt) => sum + (Number(amt) || 0), 0)
+      : Number(trip?.cab?.tyrePuncture?.repairAmount || 0)
+
+    otherAmount = Array.isArray(trip?.cab?.otherProblems?.amount)
+      ? trip.cab.otherProblems.amount.reduce((sum, amt) => sum + (Number(amt) || 0), 0)
+      : Number(trip?.cab?.otherProblems?.amount || 0)
+  }
+
+  const subtotal = fuelAmount + fastTagAmount + tyreAmount + otherAmount
+  const gst = subtotal * 0.05
+  const totalAmount = subtotal + gst
 
   return (
     <Document>
@@ -170,9 +198,7 @@ const InvoicePDF = ({
               </>
             ) : (
               <>
-                <Text style={[styles.companyInfo, { fontWeight: "bold", fontSize: 11 }]}>
-                  Company Name
-                </Text>
+                <Text style={[styles.companyInfo, { fontWeight: "bold", fontSize: 11 }]}>Company Name</Text>
                 <Text style={styles.companyInfo}>Address Line 1</Text>
                 <Text style={styles.companyInfo}>City, State, Zip</Text>
                 <Text style={styles.companyInfo}>Phone: 0000000000</Text>
@@ -190,13 +216,9 @@ const InvoicePDF = ({
 
         <View style={styles.infoBlock}>
           <View style={styles.leftInfo}>
-            <Text style={{ fontWeight: "bold", color: "#007BFF" }}>
-              WTL TOURISM PRIVATE LIMITED
-            </Text>
+            <Text style={{ fontWeight: "bold", color: "#007BFF" }}>WTL TOURISM PRIVATE LIMITED</Text>
             <Text>Floor No.: First Floor</Text>
-            <Text>
-              Office No. 09, A-Building, S No.53/2A/1, City Vista, Fountain Road, Pune
-            </Text>
+            <Text>Office No. 09, A-Building, S No.53/2A/1, City Vista, Fountain Road, Pune</Text>
             <Text>State: Maharashtra - 27</Text>
             <Text>Phone: 8237257618</Text>
             <Text>GSTIN: 27AADCW8531C1ZD</Text>
@@ -205,6 +227,7 @@ const InvoicePDF = ({
             <Text>Original for Recipient</Text>
             <Text>Invoice Number: {invoiceNumber || "RADIANT-000000"}</Text>
             <Text>Invoice Date: {invoiceDate || new Date().toLocaleDateString("en-IN")}</Text>
+            <Text>Cab Number: {trip.cab?.cabNumber || "N/A"}</Text>
           </View>
         </View>
 
@@ -233,6 +256,11 @@ const InvoicePDF = ({
         <View style={styles.rowDivider} />
 
         <View style={styles.tableRow}>
+          <Text style={[styles.tableCell, { fontWeight: "bold" }]}>Subtotal</Text>
+          <Text style={styles.tableAmount}>{subtotal.toFixed(2)}</Text>
+        </View>
+
+        <View style={styles.tableRow}>
           <Text style={[styles.tableCell, { fontWeight: "bold" }]}>GST (5%)</Text>
           <Text style={styles.tableAmount}>{gst.toFixed(2)}</Text>
         </View>
@@ -241,9 +269,7 @@ const InvoicePDF = ({
 
         <View style={styles.totalsRow}>
           <Text style={styles.totalWords}>
-            <Text style={{ fontWeight: "bold", fontStyle: "italic" }}>
-              {numberToWords(totalAmount)}
-            </Text>
+            <Text style={{ fontWeight: "bold", fontStyle: "italic" }}>{numberToWords(totalAmount)}</Text>
           </Text>
           <Text style={styles.totalNumber}>{totalAmount.toFixed(2)}</Text>
         </View>
@@ -262,15 +288,13 @@ const InvoicePDF = ({
             <Text style={{ fontSize: 8, textAlign: "center", marginTop: 10 }}>
               For {companyName || "________________"}
             </Text>
-            {signature && <Image style={styles.signBox} src={signature} />}
-            <Text style={{ fontSize: 8, textAlign: "center", marginTop: 4 }}>
-              Authorized Signatory
-            </Text>
+            {signature && <Image style={styles.signBox} src={signature || "/placeholder.svg"} />}
+            <Text style={{ fontSize: 8, textAlign: "center", marginTop: 4 }}>Authorized Signatory</Text>
           </View>
         </View>
       </Page>
     </Document>
-  );
-};
+  )
+}
 
-export default InvoicePDF;
+export default InvoicePDF

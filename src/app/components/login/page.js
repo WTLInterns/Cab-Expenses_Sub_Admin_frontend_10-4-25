@@ -1,114 +1,984 @@
-'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import axios from 'axios';
-import { motion, AnimatePresence } from 'framer-motion';
+
+// "use client"
+
+// import { useState, useEffect } from "react"
+// import { useRouter } from "next/navigation"
+// import { ToastContainer, toast } from "react-toastify"
+// import "react-toastify/dist/ReactToastify.css"
+// import axios from "axios"
+// import { motion, AnimatePresence } from "framer-motion"
+// import { Eye, EyeOff, X } from "lucide-react"
+
+// const Login = () => {
+//   const [timer, setTimer] = useState(120); // 120 seconds = 2 minutes
+//   const [isTimerRunning, setIsTimerRunning] = useState(false);
+
+//   const [email, setEmail] = useState("")
+//   const [password, setPassword] = useState("")
+//   const [showPassword, setShowPassword] = useState(false)
+//   const [loading, setLoading] = useState(false)
+
+//   // Forgot password modal state
+//   const [showForgotModal, setShowForgotModal] = useState(false)
+//   const [forgotEmail, setForgotEmail] = useState("")
+//   const [forgotLoading, setForgotLoading] = useState(false)
+
+//   // OTP verification modal state
+//   const [showOtpModal, setShowOtpModal] = useState(false)
+//   const [otp, setOtp] = useState("")
+//   const [otpLoading, setOtpLoading] = useState(false)
+
+//   // Reset password modal state
+//   const [showResetModal, setShowResetModal] = useState(false)
+//   const [newPassword, setNewPassword] = useState("")
+//   const [confirmPassword, setConfirmPassword] = useState("")
+//   const [resetLoading, setResetLoading] = useState(false)
+
+//   const router = useRouter()
+
+
+
+//   // Animation variants
+//   const cardVariants = {
+//     initial: { opacity: 0, y: 50, scale: 0.95 },
+//     animate: { opacity: 1, y: 0, scale: 1 },
+//     exit: { opacity: 0, y: -50, scale: 0.95 },
+//   }
+
+//   // Handle login form submission
+//   const handleLogin = async (e) => {
+//     e.preventDefault()
+//     setLoading(true)
+
+//     try {
+//       const res = await axios.post("http://localhost:5000/api/admin/login", {
+//         email,
+//         password,
+//       })
+
+//       if (res.status === 200) {
+//         toast.success(res.data.message)
+//         localStorage.setItem("token", res.data.token)
+//         localStorage.setItem("id", res.data.id)
+//         router.push("/AdminDashboard")
+//       }
+//     } catch (error) {
+//       toast.error("Invalid credentials or something went wrong.")
+//     } finally {
+//       setLoading(false)
+//     }
+//   }
+
+//   // Toggle forgot password modal
+//   const toggleForgotPassword = () => {
+//     setShowForgotModal(!showForgotModal)
+//     setForgotEmail(email) // Pre-fill with login email if available    http://localhost:5000/api/password/send-otp
+//   }
+
+
+
+//   useEffect(() => {
+//     let interval;
+//     if (showForgotModal || showOtpModal) {
+//       setTimer(120);
+//       setIsTimerRunning(true);
+//       interval = setInterval(() => {
+//         setTimer((prev) => {
+//           if (prev <= 1) {
+//             clearInterval(interval);
+//             setIsTimerRunning(false);
+//             return 0;
+//           }
+//           return prev - 1;
+//         });
+//       }, 1000);
+//     }
+//     return () => clearInterval(interval);
+//   }, [showForgotModal, showOtpModal]);
+  
+  
+//   // Handle sending OTP
+//   const handleSendOTP = async (e) => {
+//     e.preventDefault()
+//     setForgotLoading(true)
+
+//     try {
+//       const res = await axios.post("http://localhost:5000/api/password/send-otp", {
+//         email: forgotEmail,
+//       })
+
+//       if (res.status === 200) {
+//         toast.success(res.data.message);
+//         localStorage.setItem("email", forgotEmail);
+//         setShowForgotModal(false);
+//         setShowOtpModal(true);
+//         setTimer(120); // Reset timer
+//         setIsTimerRunning(true); // Start timer
+//         setForgotLoading(false);
+//       }
+//     } catch (error) {
+//       toast.error(error.response?.data?.message || "Failed to send OTP. Please try again.")
+//     } finally {
+//       setForgotLoading(false)
+//     }
+//   }
+
+//   // Handle OTP verification
+//   const handleVerifyOTP = async (e) => {
+//     e.preventDefault()
+//     setOtpLoading(true)
+
+//     try {
+//       const email = localStorage.getItem("email")
+//       if (!email) {
+//         toast.error("Email not found. Please try again from the beginning.")
+//         setShowOtpModal(false)
+//         setShowForgotModal(true)
+//         return
+//       }
+
+//       const res = await axios.post("http://localhost:5000/api/password/verify-otp", {
+//         email,
+//         otp,
+//       })
+
+//       if (res.status === 200) {
+//         toast.success("OTP Verified! Reset your password.")
+//         setShowOtpModal(false)
+//         setShowResetModal(true)
+//       }
+//     } catch (error) {
+//       toast.error(error.response?.data?.message || "Invalid OTP. Please try again.")
+//     } finally {
+//       setOtpLoading(false)
+//     }
+//   }
+
+//   // Handle password reset
+//   const handleResetPassword = async (e) => {
+//     e.preventDefault()
+
+//     if (newPassword !== confirmPassword) {
+//       toast.error("Passwords do not match")
+//       return
+//     }
+
+//     setResetLoading(true)
+
+//     try {
+//       const email = localStorage.getItem("email")
+//       if (!email) {
+//         toast.error("Session expired. Please try again from the beginning.")
+//         setShowResetModal(false)
+//         setShowForgotModal(true)
+//         return
+//       }
+
+//       const res = await axios.post("http://localhost:5000/api/password/reset-password", {
+//         email,
+//         password: newPassword,
+//       })
+
+//       if (res.status === 200) {
+//         toast.success("Password Reset Successful!")
+//         localStorage.removeItem("email")
+//         setShowResetModal(false)
+//         // Clear all fields
+//         setNewPassword("")
+//         setConfirmPassword("")
+//         setOtp("")
+//       }
+//     } catch (error) {
+//       toast.error(error.response?.data?.message || "Failed to reset password. Try again.")
+//     } finally {
+//       setResetLoading(false)
+//     }
+//   }
+
+//   // Modal wrapper component
+//   const modalWrapper = (modalContent, key) => (
+//     <motion.div
+//       key={key}
+//       initial={{ opacity: 0 }}
+//       animate={{ opacity: 1 }}
+//       exit={{ opacity: 0 }}
+//       className="fixed inset-0 flex justify-center items-center z-50 bg-black bg-opacity-70 backdrop-blur-sm"
+//     >
+//       {modalContent}
+//     </motion.div>
+//   )
+
+//   // Common input styles
+//   const inputStyles =
+//     "w-full px-4 py-2 bg-gray-800 text-white rounded-lg border border-gray-600 outline-none focus:border-indigo-500"
+
+//   return (
+//     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 overflow-hidden relative">
+//       <ToastContainer position="top-right" autoClose={3000} />
+
+//       {/* Main login card with blur effect when modals are active */}
+//       <div
+//         className={`transition-all duration-300 ${showForgotModal || showOtpModal || showResetModal ? "blur-sm scale-[0.98]" : ""
+//           }`}
+//       >
+//         <AnimatePresence mode="wait">
+//           <motion.div
+//             key="login-card"
+//             variants={cardVariants}
+//             initial="initial"
+//             animate="animate"
+//             exit="exit"
+//             transition={{ duration: 0.6, ease: "easeInOut" }}
+//             className="relative w-[400px] h-auto z-10 login-card"
+//           >
+//             <div className="bg-gray-900 text-white p-10 rounded-2xl shadow-2xl border border-gray-700">
+//               <h2 className="text-3xl font-bold mb-8 text-center">Admin Login</h2>
+//               <form onSubmit={handleLogin}>
+//                 <div className="mb-5">
+//                   <label htmlFor="email" className="block text-gray-300 text-sm font-bold mb-2">
+//                     Email
+//                   </label>
+//                   <motion.input
+//                     whileFocus={{ scale: 1.05, boxShadow: "0px 0px 8px rgb(99,102,241)" }}
+//                     id="email"
+//                     type="email"
+//                     value={email}
+//                     onChange={(e) => setEmail(e.target.value)}
+//                     className={inputStyles}
+//                     required
+//                     placeholder="Enter Your email"
+//                   />
+//                 </div>
+
+//                 <div className="mb-2">
+//                   <label htmlFor="password" className="block text-gray-300 text-sm font-bold mb-2">
+//                     Password
+//                   </label>
+//                   <div className="relative">
+//                     <motion.input
+//                       whileFocus={{ scale: 1.05, boxShadow: "0px 0px 8px rgb(99,102,241)" }}
+//                       id="password"
+//                       type={showPassword ? "text" : "password"}
+//                       value={password}
+//                       onChange={(e) => setPassword(e.target.value)}
+//                       className={`${inputStyles} pr-10`}
+//                       required
+//                       placeholder="Enter Your password"
+//                     />
+//                     <button
+//                       type="button"
+//                       onClick={() => setShowPassword(!showPassword)}
+//                       className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+//                     >
+//                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+//                     </button>
+//                   </div>
+//                 </div>
+
+//                 <div className="mb-6 text-right">
+//                   <p className="text-sm text-indigo-400 cursor-pointer hover:underline" onClick={toggleForgotPassword}>
+//                     Forgot Password?
+//                   </p>
+//                 </div>
+
+//                 <motion.button
+//                   whileHover={{ scale: 1.05 }}
+//                   type="submit"
+//                   className={`w-full bg-indigo-600 text-white py-2.5 rounded-lg text-base font-medium transition ${loading ? "opacity-50 cursor-not-allowed" : "hover:bg-indigo-500"
+//                     }`}
+//                   disabled={loading}
+//                 >
+//                   {loading ? "Logging in..." : "Login"}
+//                 </motion.button>
+//               </form>
+//             </div>
+//           </motion.div>
+//         </AnimatePresence>
+//       </div>
+
+//       {/* Forgot Password Modal */}
+//       <AnimatePresence>
+//         {showForgotModal &&
+//           modalWrapper(
+//             <motion.div
+//               variants={cardVariants}
+//               initial="initial"
+//               animate="animate"
+//               exit="exit"
+//               transition={{ duration: 0.6, ease: "easeInOut" }}
+//               className=" bg-black/50 to-transparent backdrop-blur-md  text-white p-8 rounded-2xl shadow-2xl border border-gray-700 w-[400px] relative"
+//             >
+//               <button
+//                 onClick={() => setShowForgotModal(false)}
+//                 className="absolute top-3 right-3 text-gray-400 hover:text-white"
+//               >
+//                 <X size={20} />
+//               </button>
+//               <h2 className="text-2xl font-bold mb-6 text-center">Forgot Password</h2>
+            
+//               <form onSubmit={handleSendOTP}>
+//                 <div className="mb-5">
+//                   <label htmlFor="forgotEmail" className="block text-sm font-bold text-gray-300 mb-2">
+//                     Email
+//                   </label>
+//                   <motion.input
+//                     whileFocus={{ scale: 1.05, boxShadow: "0px 0px 8px rgb(99,102,241)" }}
+//                     id="forgotEmail"
+//                     type="email"
+//                     value={forgotEmail}
+//                     onChange={(e) => setForgotEmail(e.target.value)}
+//                     className={inputStyles}
+//                     required
+//                   />
+//                 </div>
+//                 <motion.button
+//                   whileHover={{ scale: 1.05 }}
+//                   type="submit"
+//                   className={`w-full bg-indigo-600 text-white py-2.5 rounded-lg text-base font-medium transition ${forgotLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-indigo-500"
+//                     }`}
+//                   disabled={forgotLoading}
+//                 >
+//                   {forgotLoading ? "Sending OTP..." : "Send OTP"}
+//                 </motion.button>
+//               </form>
+//             </motion.div>,
+//             "forgot-modal",
+//           )}
+
+//         {/* OTP Verification Modal */}
+//         {showOtpModal &&
+//           modalWrapper(
+//             <motion.div
+//               variants={cardVariants}
+//               initial="initial"
+//               animate="animate"
+//               exit="exit"
+//               transition={{ duration: 0.6, ease: "easeInOut" }}
+//               className="bg-gray-900 text-white p-8 rounded-2xl shadow-2xl border border-gray-700 w-[400px] relative"
+//             >
+//               <button
+//                 onClick={() => setShowOtpModal(false)}
+//                 className="absolute top-3 right-3 text-gray-400 hover:text-white"
+//               >
+//                 <X size={20} />
+//               </button>
+//               <h2 className="text-2xl font-bold mb-4 text-center">Verify OTP</h2>
+//               <p className="text-gray-400 text-sm mb-6 text-center">
+//                 Enter the 6-digit OTP sent to your email address.
+//               </p>
+//               <p
+//                 className={`text-sm text-center mb-4 ${isTimerRunning ? "text-green-400" : "text-red-500"
+//                   }`}
+//               >
+//                 {isTimerRunning
+//                   ? `OTP expires in ${Math.floor(timer / 60)}:${(timer % 60).toString().padStart(2, "0")}`
+//                   : "OTP expired. Please request a new one."}
+//               </p>
+//               <form onSubmit={handleVerifyOTP}>
+//                 <div className="mb-6">
+//                   <label htmlFor="otp" className="block text-sm font-bold text-gray-300 mb-2">
+//                     OTP
+//                   </label>
+//                   <motion.input
+//                     whileFocus={{ scale: 1.05, boxShadow: "0px 0px 8px rgb(99,102,241)" }}
+//                     type="text"
+//                     id="otp"
+//                     value={otp}
+//                     onChange={(e) => setOtp(e.target.value)}
+//                     className={inputStyles}
+//                     required
+//                     placeholder="Enter 6-digit OTP"
+//                     maxLength={6}
+//                   />
+//                 </div>
+//                 <motion.button
+//                   whileHover={{ scale: 1.05 }}
+//                   type="submit"
+//                   className={`w-full bg-indigo-600 text-white py-2.5 rounded-lg text-base font-medium transition ${otpLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-indigo-500"
+//                     }`}
+//                   disabled={otpLoading}
+//                 >
+//                   {otpLoading ? "Verifying..." : "Verify OTP"}
+//                 </motion.button>
+//                 <div className="mt-4 text-center">
+//                   <button
+//                     type="button"
+//                     onClick={() => {
+//                       setShowOtpModal(false)
+//                       setShowForgotModal(true)
+//                     }}
+//                     className="text-sm text-indigo-400 hover:underline"
+//                   >
+//                     Didn't receive OTP? Try again
+//                   </button>
+//                 </div>
+//               </form>
+//             </motion.div>,
+//             "otp-modal",
+//           )}
+
+//         {/* Reset Password Modal */}
+//         {showResetModal &&
+//           modalWrapper(
+//             <motion.div
+//               variants={cardVariants}
+//               initial="initial"
+//               animate="animate"
+//               exit="exit"
+//               transition={{ duration: 0.6, ease: "easeInOut" }}
+//               className="bg-gray-900 text-white p-8 rounded-2xl shadow-2xl border border-gray-700 w-[400px] relative"
+//             >
+//               <button
+//                 onClick={() => setShowResetModal(false)}
+//                 className="absolute top-3 right-3 text-gray-400 hover:text-white"
+//               >
+//                 <X size={20} />
+//               </button>
+//               <h2 className="text-2xl font-bold mb-6 text-center">Reset Password</h2>
+//               <form onSubmit={handleResetPassword}>
+//                 <div className="mb-4">
+//                   <label htmlFor="new-password" className="block text-sm font-bold text-gray-300 mb-2">
+//                     New Password
+//                   </label>
+//                   <div className="relative">
+//                     <motion.input
+//                       whileFocus={{ scale: 1.05, boxShadow: "0px 0px 8px rgb(99,102,241)" }}
+//                       type="password"
+//                       id="new-password"
+//                       value={newPassword}
+//                       onChange={(e) => setNewPassword(e.target.value)}
+//                       className={inputStyles}
+//                       required
+//                       minLength={6}
+//                     />
+//                   </div>
+//                 </div>
+//                 <div className="mb-6">
+//                   <label htmlFor="confirm-password" className="block text-sm font-bold text-gray-300 mb-2">
+//                     Confirm Password
+//                   </label>
+//                   <div className="relative">
+//                     <motion.input
+//                       whileFocus={{ scale: 1.05, boxShadow: "0px 0px 8px rgb(99,102,241)" }}
+//                       type="password"
+//                       id="confirm-password"
+//                       value={confirmPassword}
+//                       onChange={(e) => setConfirmPassword(e.target.value)}
+//                       className={inputStyles}
+//                       required
+//                       minLength={6}
+//                     />
+//                   </div>
+//                 </div>
+//                 <motion.button
+//                   whileHover={{ scale: 1.05 }}
+//                   type="submit"
+//                   className={`w-full bg-indigo-600 text-white py-2.5 rounded-lg text-base font-medium transition ${resetLoading ? "opacity-50 cursor-not-allowed" : "hover:bg-indigo-500"
+//                     }`}
+//                   disabled={resetLoading}
+//                 >
+//                   {resetLoading ? "Resetting..." : "Reset Password"}
+//                 </motion.button>
+//               </form>
+//             </motion.div>,
+//             "reset-modal",
+//           )}
+//       </AnimatePresence>
+//     </div>
+//   )
+// }
+
+// export default Login
+
+
+"use client"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { ToastContainer, toast } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
+import axios from "axios"
+import { motion, AnimatePresence } from "framer-motion"
+import { Eye, EyeOff, X, Car } from "lucide-react"
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [timer, setTimer] = useState(120)
+  const [isTimerRunning, setIsTimerRunning] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [showForgotModal, setShowForgotModal] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState("")
+  const [forgotLoading, setForgotLoading] = useState(false)
+  const [showOtpModal, setShowOtpModal] = useState(false)
+  const [otp, setOtp] = useState("")
+  const [otpLoading, setOtpLoading] = useState(false)
+  const [showResetModal, setShowResetModal] = useState(false)
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [resetLoading, setResetLoading] = useState(false)
 
+  const router = useRouter()
+
+  // Animation variants
+  const cardVariants = {
+    initial: { opacity: 0, y: 20, scale: 0.95 },
+    animate: { opacity: 1, y: 0, scale: 1 },
+    exit: { opacity: 0, y: -20, scale: 0.95 },
+  }
+
+  // All your existing handlers remain the same
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault()
+    setLoading(true)
 
     try {
-      // Send login request to backend
-      const res = await axios.post('http://localhost:5000/api/admin/login', {
+      const res = await axios.post("http://localhost:5000/api/admin/login", {
         email,
-        password
-      });
+        password,
+      })
 
-      // Check if login was successful
       if (res.status === 200) {
-        toast.success(res.data.message);
-
-        // ✅ Store the token in localStorage
-        localStorage.setItem('token', res.data.token);
-        localStorage.setItem('id', res.data.id);
-
-        // ✅ Redirect to the dashboard
-        router.push('/AdminDashboard');
+        toast.success(res.data.message)
+        localStorage.setItem("token", res.data.token)
+        localStorage.setItem("id", res.data.id)
+        router.push("/AdminDashboard")
       }
     } catch (error) {
-      // Handle error response
-      toast.error('Invalid credentials or something went wrong.');
+      toast.error("Invalid credentials or something went wrong.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  // Define animation variants
-  const variants = {
-    initial: { opacity: 0, rotateY: -90 },
-    animate: { opacity: 1, rotateY: 0 },
-    exit: { opacity: 0, rotateY: 90 },
-  };
+  const toggleForgotPassword = () => {
+    setShowForgotModal(!showForgotModal)
+    setForgotEmail(email)
+  }
+
+  useEffect(() => {
+    let interval;
+    if (showForgotModal || showOtpModal) {
+      setTimer(120);
+      setIsTimerRunning(true);
+      interval = setInterval(() => {
+        setTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            setIsTimerRunning(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [showForgotModal, showOtpModal]);
+
+  const handleSendOTP = async (e) => {
+    e.preventDefault()
+    setForgotLoading(true)
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/password/send-otp", {
+        email: forgotEmail,
+      })
+
+      if (res.status === 200) {
+        toast.success(res.data.message)
+        localStorage.setItem("email", forgotEmail)
+        setShowForgotModal(false)
+        setShowOtpModal(true)
+        setTimer(120)
+        setIsTimerRunning(true)
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to send OTP. Please try again.")
+    } finally {
+      setForgotLoading(false)
+    }
+  }
+
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault()
+    setOtpLoading(true)
+
+    try {
+      const email = localStorage.getItem("email")
+      if (!email) {
+        toast.error("Email not found. Please try again from the beginning.")
+        setShowOtpModal(false)
+        setShowForgotModal(true)
+        return
+      }
+
+      const res = await axios.post("http://localhost:5000/api/password/verify-otp", {
+        email,
+        otp,
+      })
+
+      if (res.status === 200) {
+        toast.success("OTP Verified! Reset your password.")
+        setShowOtpModal(false)
+        setShowResetModal(true)
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Invalid OTP. Please try again.")
+    } finally {
+      setOtpLoading(false)
+    }
+  }
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match")
+      return
+    }
+
+    setResetLoading(true)
+
+    try {
+      const email = localStorage.getItem("email")
+      if (!email) {
+        toast.error("Session expired. Please try again from the beginning.")
+        setShowResetModal(false)
+        setShowForgotModal(true)
+        return
+      }
+
+      const res = await axios.post("http://localhost:5000/api/password/reset-password", {
+        email,
+        password: newPassword,
+      })
+
+      if (res.status === 200) {
+        toast.success("Password Reset Successful!")
+        localStorage.removeItem("email")
+        setShowResetModal(false)
+        setNewPassword("")
+        setConfirmPassword("")
+        setOtp("")
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to reset password. Try again.")
+    } finally {
+      setResetLoading(false)
+    }
+  }
+
+  const modalWrapper = (modalContent, key) => (
+    <motion.div
+      key={key}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 flex justify-center items-center z-50 bg-black/60 backdrop-blur-sm"
+    >
+      {modalContent}
+    </motion.div>
+  )
+
+  const inputStyles = "w-full px-4 py-3 bg-white/10 text-white rounded-xl border border-white/20 outline-none focus:border-blue-500 transition-all duration-200"
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-gray-900 to-purple-900 relative overflow-hidden">
+      <div className="absolute inset-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(17,24,39,0.9),rgba(17,24,39,1))]" />
+      
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-grid-white/10 bg-grid-16 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
+      </div>
+
       <ToastContainer position="top-right" autoClose={3000} />
-      <div className="relative w-80 h-96">
+
+      <div className={`relative z-10 w-full max-w-md px-4 ${showForgotModal || showOtpModal || showResetModal ? "blur-sm scale-[0.98]" : ""}`}>
         <AnimatePresence mode="wait">
           <motion.div
-            key="login"
-            className="absolute inset-0 bg-gray-900 text-white p-8 rounded-2xl shadow-2xl border border-gray-700"
-            style={{ backfaceVisibility: "hidden" }}
-            initial={variants.initial}
-            animate={variants.animate}
-            exit={variants.exit}
-            transition={{ duration: 0.8 }}
+            key="login-card"
+            variants={cardVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="w-full backdrop-blur-xl bg-white/10 p-8 rounded-2xl border border-white/20 shadow-[0_0_40px_rgba(8,_112,_184,_0.7)]"
           >
-            <h2 className="text-2xl font-bold mb-6 text-center">Admin Login</h2>
-            <form onSubmit={handleLogin}>
-              <div className="mb-4">
-                <label htmlFor="email" className="block text-gray-300 text-sm font-bold mb-2">Email</label>
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mb-4">
+                <Car className="w-8 h-8 text-blue-400" />
+              </div>
+              <h2 className="text-3xl font-bold text-white mb-1">Admin Login</h2>
+              <p className="text-blue-200/80">Welcome back! Please enter your details</p>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-blue-200 mb-2">
+                  Email Address
+                </label>
                 <motion.input
-                  whileFocus={{ scale: 1.05, boxShadow: "0px 0px 8px rgb(99,102,241)" }}
+                  whileFocus={{ scale: 1.01 }}
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-800 text-white rounded-lg border border-gray-600 outline-none focus:border-indigo-500"
+                  className={inputStyles}
                   required
+                  placeholder="Enter your email"
                 />
               </div>
-              <div className="mb-4">
-                <label htmlFor="password" className="block text-gray-300 text-sm font-bold mb-2">Password</label>
-                <motion.input
-                  whileFocus={{ scale: 1.05, boxShadow: "0px 0px 8px rgb(99,102,241)" }}
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-800 text-white rounded-lg border border-gray-600 outline-none focus:border-indigo-500"
-                  required
-                />
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-blue-200 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <motion.input
+                    whileFocus={{ scale: 1.01 }}
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`${inputStyles} pr-10`}
+                    required
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-200 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={toggleForgotPassword}
+                  className="text-sm text-blue-300 hover:text-blue-200 transition-colors"
+                >
+                  Forgot password?
+                </button>
+              </div>
+
               <motion.button
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 type="submit"
-                className={`w-full bg-indigo-600 text-white py-2 rounded-lg transition ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-indigo-500'}`}
+                className={`w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all duration-200 ${
+                  loading ? "opacity-70 cursor-not-allowed" : ""
+                }`}
                 disabled={loading}
               >
-                {loading ? 'Logging in...' : 'Login'}
+                {loading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Logging in...
+                  </span>
+                ) : (
+                  "Sign in"
+                )}
               </motion.button>
             </form>
-            <p
-              className="text-center text-sm text-indigo-400 mt-4 cursor-pointer hover:underline"
-              onClick={() => router.push('/forgot-password')}
-            >
-              Forgot Password?
-            </p>
           </motion.div>
         </AnimatePresence>
       </div>
-    </div>
-  );
-};
 
-export default Login;
+      <AnimatePresence>
+        {showForgotModal &&
+          modalWrapper(
+            <motion.div
+              variants={cardVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="w-full max-w-md backdrop-blur-xl bg-white/10 p-8 rounded-2xl border border-white/20 shadow-[0_0_40px_rgba(8,_112,_184,_0.7)] mx-4"
+            >
+              <button
+                onClick={() => setShowForgotModal(false)}
+                className="absolute top-4 right-4 text-blue-200 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <h2 className="text-2xl font-bold text-white mb-6 text-center">Forgot Password</h2>
+              <form onSubmit={handleSendOTP} className="space-y-6">
+                <div>
+                  <label htmlFor="forgotEmail" className="block text-sm font-medium text-blue-200 mb-2">
+                    Email Address
+                  </label>
+                  <motion.input
+                    whileFocus={{ scale: 1.01 }}
+                    id="forgotEmail"
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    className={inputStyles}
+                    required
+                    placeholder="Enter your email"
+                  />
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  className={`w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all duration-200 ${
+                    forgotLoading ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
+                  disabled={forgotLoading}
+                >
+                  {forgotLoading ? "Sending OTP..." : "Send OTP"}
+                </motion.button>
+              </form>
+            </motion.div>,
+            "forgot-modal"
+          )}
+
+        {showOtpModal &&
+          modalWrapper(
+            <motion.div
+              variants={cardVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="w-full max-w-md backdrop-blur-xl bg-white/10 p-8 rounded-2xl border border-white/20 shadow-[0_0_40px_rgba(8,_112,_184,_0.7)] mx-4"
+            >
+              <button
+                onClick={() => setShowOtpModal(false)}
+                className="absolute top-4 right-4 text-blue-200 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <h2 className="text-2xl font-bold text-white mb-2 text-center">Verify OTP</h2>
+              <p className="text-blue-200/80 text-sm mb-6 text-center">
+                Enter the 6-digit OTP sent to your email address
+              </p>
+              <p className={`text-sm text-center mb-6 ${isTimerRunning ? "text-green-400" : "text-red-400"}`}>
+                {isTimerRunning
+                  ? `OTP expires in ${Math.floor(timer / 60)}:${(timer % 60)
+                      .toString()
+                      .padStart(2, "0")}`
+                  : "OTP expired. Please request a new one."}
+              </p>
+              <form onSubmit={handleVerifyOTP} className="space-y-6">
+                <div>
+                  <label htmlFor="otp" className="block text-sm font-medium text-blue-200 mb-2">
+                    OTP Code
+                  </label>
+                  <motion.input
+                    whileFocus={{ scale: 1.01 }}
+                    type="text"
+                    id="otp"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className={inputStyles}
+                    required
+                    placeholder="Enter 6-digit OTP"
+                    maxLength={6}
+                  />
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  className={`w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all duration-200 ${
+                    otpLoading ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
+                  disabled={otpLoading}
+                >
+                  {otpLoading ? "Verifying..." : "Verify OTP"}
+                </motion.button>
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowOtpModal(false)
+                      setShowForgotModal(true)
+                    }}
+                    className="text-sm text-blue-300 hover:text-blue-200 transition-colors"
+                  >
+                    Didn't receive OTP? Try again
+                  </button>
+                </div>
+              </form>
+            </motion.div>,
+            "otp-modal"
+          )}
+
+        {showResetModal &&
+          modalWrapper(
+            <motion.div
+              variants={cardVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="w-full max-w-md backdrop-blur-xl bg-white/10 p-8 rounded-2xl border border-white/20 shadow-[0_0_40px_rgba(8,_112,_184,_0.7)] mx-4"
+            >
+              <button
+                onClick={() => setShowResetModal(false)}
+                className="absolute top-4 right-4 text-blue-200 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <h2 className="text-2xl font-bold text-white mb-6 text-center">Reset Password</h2>
+              <form onSubmit={handleResetPassword} className="space-y-6">
+                <div>
+                  <label htmlFor="new-password" className="block text-sm font-medium text-blue-200 mb-2">
+                    New Password
+                  </label>
+                  <motion.input
+                    whileFocus={{ scale: 1.01 }}
+                    type="password"
+                    id="new-password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className={inputStyles}
+                    required
+                    minLength={6}
+                    placeholder="Enter new password"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="confirm-password" className="block text-sm font-medium text-blue-200 mb-2">
+                    Confirm Password
+                  </label>
+                  <motion.input
+                    whileFocus={{ scale: 1.01 }}
+                    type="password"
+                    id="confirm-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={inputStyles}
+                    required
+                    minLength={6}
+                    placeholder="Confirm new password"
+                  />
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  className={`w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all duration-200 ${
+                    resetLoading ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
+                  disabled={resetLoading}
+                >
+                  {resetLoading ? "Resetting..." : "Reset Password"}
+                </motion.button>
+              </form>
+            </motion.div>,
+            "reset-modal"
+          )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+export default Login

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@react-google-maps/api": "^2.20.6",
     "@react-pdf/renderer": "^4.3.0",
     "axios": "^1.8.2",
     "car-expense": "file:",

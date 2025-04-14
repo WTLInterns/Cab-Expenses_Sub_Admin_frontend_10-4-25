@@ -1,7 +1,4 @@
 
-
-
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -293,7 +290,7 @@ const Driver = () => {
               <table className="min-w-full table-auto border-collapse">
                 <thead className="bg-gray-700 text-white">
                   <tr>
-                    <th className="p-3">Image</th>
+                    <th className="p-3">Profile</th>
                     <th className="p-3">Driver Name</th>
                     <th className="p-3">Email</th>
                     <th className="p-3">Aadhar No</th>
