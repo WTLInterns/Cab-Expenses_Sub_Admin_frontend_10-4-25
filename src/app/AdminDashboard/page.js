@@ -20,6 +20,7 @@ const AdminDashboard = () => {
         totalExpenses: 0,
     });
 
+
     const [expenseData, setExpenseData] = useState([]);
     const [expenseBreakdown, setExpenseBreakdown] = useState([]);
     const [loading, setLoading] = useState(true);

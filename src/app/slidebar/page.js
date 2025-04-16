@@ -88,7 +88,20 @@ const Sidebar = () => {
     <>
       {/* Mobile Navbar - Only shown on mobile */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-indigo-500 to-indigo-700 bg-opacity-90 backdrop-blur-sm p-4 flex justify-between items-center border-b border-gray-700">
-        <h2 className="text-white text-lg font-semibold">Admin</h2>
+      <div className="flex items-center gap-4">
+              {companyLogo?.trim() ? (
+                <img
+                  src={companyLogo}
+                  alt="Company Logo"
+                  className="w-12 h-12 rounded-full border-4 border-white"
+                />
+              ) : (
+                <span className="text-white text-sm italic">No Logo</span>
+              )}
+              <span className="text-white text-lg font-semibold">
+                {companyName || ""}
+              </span>
+            </div>
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="text-white text-2xl p-1 rounded-full hover:bg-gray-800 transition-all"
@@ -133,7 +146,7 @@ const Sidebar = () => {
               ) : (
                 <span className="text-white text-sm italic">No Logo</span>
               )}
-              <span className="text-green-400 text-lg font-semibold">
+              <span className="text-indigo-500 text-lg font-semibold">
                 {companyName || ""}
               </span>
             </div>

@@ -269,15 +269,7 @@ const CabSearch = () => {
               console.log("helloo");
 
 
-              // Store driver location
-              // driverLocations[data.driverId] = {
-              //   ...data.location,
-              //   timestamp: new Date().toISOString(),
-              // };
-              //  console.log("alldata",selectedDriver,);
 
-              // Update selected driver location if it matches
-              // if (selectedDriver && selectedDriver.driver?.id === data.driverId) {
               setSelectedDriver((prev) => ({
                 ...prev,
                 driver: {
@@ -330,9 +322,9 @@ const CabSearch = () => {
   // Initialize map when showing it and Leaflet is loaded
   useEffect(() => {
     if (showMap && selectedDriver && mapLoaded) {
-        initializeMap(); // Call to initialize the map and zoom to driver's location
+      initializeMap(); // Call to initialize the map and zoom to driver's location
     }
-}, [showMap, selectedDriver, mapLoaded]);
+  }, [showMap, selectedDriver, mapLoaded]);
 
   // Calculate position along the route based on progress
   const calculatePositionAlongRoute = (from, to, progress) => {
@@ -510,15 +502,15 @@ const CabSearch = () => {
 
   const initializeMap = () => {
     if (typeof window === "undefined" || !window.L) {
-        console.log("Leaflet not loaded yet");
-        return;
+      console.log("Leaflet not loaded yet");
+      return;
     }
 
     const L = window.L;
     const mapContainer = document.getElementById("map-container");
 
     if (!mapContainer) {
-        return;
+      return;
     }
 
     // Set explicit height to ensure the container is visible
@@ -529,44 +521,44 @@ const CabSearch = () => {
     cleanupMap();
 
     try {
-        // Get the current driver's location
-        const driverLocation = selectedDriver.driver?.location;
+      // Get the current driver's location
+      const driverLocation = selectedDriver.driver?.location;
 
-        // Check if driver's location is available
-        if (!driverLocation) {
-            console.error("Driver location is not available.");
-            return; // Exit if no location is available
-        }
+      // Check if driver's location is available
+      if (!driverLocation) {
+        console.error("Driver location is not available.");
+        return; // Exit if no location is available
+      }
 
-        // Create the map using Leaflet and zoom directly to the driver's location
-        const map = L.map("map-container").setView(
-            [driverLocation.latitude, driverLocation.longitude],
-            15 // Zoom level to directly focus on the driver's location
-        );
+      // Create the map using Leaflet and zoom directly to the driver's location
+      const map = L.map("map-container").setView(
+        [driverLocation.latitude, driverLocation.longitude],
+        15 // Zoom level to directly focus on the driver's location
+      );
 
-        // Add OpenStreetMap tiles
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution:
-                '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        }).addTo(map);
+      // Add OpenStreetMap tiles
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
 
-        // Create custom marker icon for driver
-        const driverIcon = L.icon({
-            iconUrl: "https://maps.google.com/mapfiles/ms/micons/cabs.png",
-            iconSize: [32, 32],
-            iconAnchor: [16, 32],
-            popupAnchor: [0, -32],
-        });
+      // Create custom marker icon for driver
+      const driverIcon = L.icon({
+        iconUrl: "https://maps.google.com/mapfiles/ms/micons/cabs.png",
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+      });
 
-        // Create marker for the driver's current position
-        const marker = L.marker([driverLocation.latitude, driverLocation.longitude], {
-            icon: driverIcon,
-        }).addTo(map);
+      // Create marker for the driver's current position
+      const marker = L.marker([driverLocation.latitude, driverLocation.longitude], {
+        icon: driverIcon,
+      }).addTo(map);
 
-        // Add popup with driver and route information
-        marker
-            .bindPopup(
-                `
+      // Add popup with driver and route information
+      marker
+        .bindPopup(
+          `
           <div style="color: #333; padding: 8px; min-width: 200px;">
             <strong style="font-size: 14px;">${selectedDriver.driver?.name || "Driver"}</strong><br>
             <div style="margin-top: 5px;">
@@ -575,25 +567,25 @@ const CabSearch = () => {
             </div>
           </div>
         `
-            )
-            .openPopup();
+        )
+        .openPopup();
 
-        // Save references for future use
-        mapRef.current = map;
-        markerRef.current = marker;
+      // Save references for future use
+      mapRef.current = map;
+      markerRef.current = marker;
 
-        // Force a resize to ensure the map renders correctly
-        setTimeout(() => {
-            if (mapRef.current) {
-                mapRef.current.invalidateSize();
-            }
-        }, 100);
+      // Force a resize to ensure the map renders correctly
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.invalidateSize();
+        }
+      }, 100);
 
     } catch (error) {
-        console.error("Error initializing map:", error);
-        showNotification("Error initializing map");
+      console.error("Error initializing map:", error);
+      showNotification("Error initializing map");
     }
-};
+  };
 
   // Add waypoints along the route to make it more detailed
   const addWaypointsAlongRoute = (route, map, L) => {
@@ -653,7 +645,7 @@ const CabSearch = () => {
     markerRef.current.setLatLng(newPosition);
     mapRef.current.panTo(newPosition); // Pan to the new driver location
     mapRef.current.setZoom(15); // Set zoom level to 15 for better visibility
-};
+  };
 
   const showNotification = (msg) => {
     setNotification(msg);
@@ -748,59 +740,59 @@ const CabSearch = () => {
 
   const fetchDriverLocation = async (driver) => {
     try {
-        if (!driver.driver?.id) {
-            showNotification("Driver ID not found");
-            return;
+      if (!driver.driver?.id) {
+        showNotification("Driver ID not found");
+        return;
+      }
+
+      showNotification(`Fetching location for ${driver.driver?.name}...`);
+
+      // Get location based on the assigned route
+      const location = getDriverLocation(driver.cab, driver.driver.id);
+
+      // Store the location
+      driverLocations[driver.driver.id] = location;
+
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        const locationMessage = {
+          type: "location",
+          driverId: driver.driver?.id,
+          role: "driver",
+          location: location,
+        };
+
+        wsRef.current.send(JSON.stringify(locationMessage));
+
+        // Assuming existing state update logic
+        setCabDetails((prevCabs) => {
+          // Your previous logic here
+        });
+
+        setFilteredCabs((prevCabs) => {
+          // Your previous logic here
+        });
+
+        // Also update the selected driver if this is the one being viewed
+        if (selectedDriver && selectedDriver.driver?.id === driver.driver?.id) {
+          setSelectedDriver((prev) => ({
+            ...prev,
+            driver: {
+              ...prev.driver,
+              location: location,
+            },
+          }));
+
+          // Update map marker if using Leaflet directly
+          if (markerRef.current && mapRef.current) {
+            updateMapMarker(location); // Automatically zooms in on the new location
+          }
         }
-
-        showNotification(`Fetching location for ${driver.driver?.name}...`);
-
-        // Get location based on the assigned route
-        const location = getDriverLocation(driver.cab, driver.driver.id);
-
-        // Store the location
-        driverLocations[driver.driver.id] = location;
-
-        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-            const locationMessage = {
-                type: "location",
-                driverId: driver.driver?.id,
-                role: "driver",
-                location: location,
-            };
-
-            wsRef.current.send(JSON.stringify(locationMessage));
-
-            // Assuming existing state update logic
-            setCabDetails((prevCabs) => {
-                // Your previous logic here
-            });
-
-            setFilteredCabs((prevCabs) => {
-                // Your previous logic here
-            });
-
-            // Also update the selected driver if this is the one being viewed
-            if (selectedDriver && selectedDriver.driver?.id === driver.driver?.id) {
-                setSelectedDriver((prev) => ({
-                    ...prev,
-                    driver: {
-                        ...prev.driver,
-                        location: location,
-                    },
-                }));
-
-                // Update map marker if using Leaflet directly
-                if (markerRef.current && mapRef.current) {
-                    updateMapMarker(location); // Automatically zooms in on the new location
-                }
-            }
-        }
+      }
     } catch (error) {
-        console.error("Error fetching driver location:", error);
-        showNotification("Error fetching driver location");
+      console.error("Error fetching driver location:", error);
+      showNotification("Error fetching driver location");
     }
-};
+  };
 
   const closeMap = () => {
     // Stop location tracking when map is closed
@@ -990,26 +982,46 @@ const CabSearch = () => {
           </>
         )
 
-      case "vehicleServicing":
-        return (
-          <>
-            <div className="mb-4">
-              <p>
-                <span className="text-gray-400">Required Service:</span> {data.requiredService ? "Yes" : "No"}
-              </p>
-              <p>
-                <span className="text-gray-400">Details:</span> {data.details || "N/A"}
-              </p>
+        case "vehicleServicing":
+          return (
+            <>
+              <div className="mb-4">
+                <p>
+                  <span className="text-gray-400">Required Service:</span>{" "}
+                  {data.requiredService ? "Yes" : "No"}
+                </p>
+                <p>
+                  <span className="text-gray-400">Details:</span> {data.details || "N/A"}
+                </p>
+        
+                {/* Service Images */}
+                {data.image && Array.isArray(data.image) && data.image.length > 0 && (
+                  <>
+                    <h3 className="text-lg font-semibold mt-4 mb-2">OdoMeter Images</h3>
+                    {renderImageGallery(data.image)}
+                  </>
+                )}
+        
+                {/* Receipt Images */}
+                {data.receiptImage && Array.isArray(data.receiptImage) && data.receiptImage.length > 0 && (
+                  <>
+                    <h3 className="text-lg font-semibold mt-4 mb-2">Vehicle Receipt Images</h3>
+                    {renderImageGallery(data.receiptImage)}
+                  </>
+                )}
 
-              {data.image && Array.isArray(data.image) && data.image.length > 0 && (
-                <>
-                  <h3 className="text-lg font-medium mt-4 mb-2">Service Images</h3>
-                  {renderImageGallery(data.image)}
-                </>
-              )}
-            </div>
-          </>
-        )
+                 {/* Total Service Amount */}
+                 {data.amount && Array.isArray(data.amount) && data.amount.length > 0 && (
+                  <p>
+                    <span className="text-gray-400">Total Amount:</span>{" "}
+                    ₹{data.amount.reduce((acc, curr) => acc + Number(curr || 0), 0)}
+                  </p>
+                )}
+              </div>
+            </>
+          );
+        
+
 
       case "otherProblems":
         return (
