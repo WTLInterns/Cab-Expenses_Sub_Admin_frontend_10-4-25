@@ -100,55 +100,114 @@ export default function CabService() {
         </div>
 
         {/* ✅ Table */}
-        <div className="bg-gray-800 rounded shadow p-4 overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-700 text-white">
-                <th className="p-2">#</th>
-                <th className="p-2">Cab No</th>
-                <th className="p-2">Driver</th>
-                <th className="p-2">Status</th>
-                <th className="p-2">Amount</th>
-                <th className="p-2">Receipt</th>
-              </tr>
-            </thead>
-            <tbody>
-              {services.map((srv, i) => (
-                <tr key={srv._id} className="text-center border-b border-gray-600">
-                  <td className="p-2">{i + 1}</td>
-                  <td className="p-2">{srv?.cab?.cabNumber || "-"}</td>
-                  <td className="p-2">{srv?.driver?.name || "-"}</td>
-                  <td className="p-2 capitalize">{srv.status}</td>
-                  <td className="p-2">
-                    {srv.vehicleServicing?.amount?.length > 0
-                      ? srv.vehicleServicing.amount
-                        .filter((a) => a !== null)
-                        .map((amt, idx) => (
-                          <div key={idx}>₹{amt}</div>
-                        ))
-                      : "-"}
-                  </td>
-                  <td className="p-2">
-                    {srv.vehicleServicing?.receiptImage?.length > 0
-                      ? srv.vehicleServicing.receiptImage.map((img, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => {
-                            setReceiptImage(img);
-                            setShowReceiptModal(true);
-                          }}
-                          className="text-blue-400 underline hover:text-blue-300 mr-2"
-                        >
-                          View {idx + 1}
-                        </button>
-                      ))
-                      : "-"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="bg-gray-800 rounded-lg shadow p-4 space-y-4">
+  {/* Header - Visible on mobile */}
+  <div className="md:hidden grid grid-cols-2 gap-2 text-sm text-gray-400 font-medium">
+    <div># & Cab No</div>
+    <div>Driver & Status</div>
+  </div>
+
+  {services.map((srv, i) => (
+    <div 
+      key={srv._id} 
+      className="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors duration-200"
+    >
+      {/* Mobile View (2 columns) */}
+      <div className="md:hidden grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400">#</span>
+            <span>{i + 1}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400">Cab No</span>
+            <span>{srv?.cab?.cabNumber || "-"}</span>
+          </div>
         </div>
+        
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400">Driver</span>
+            <span>{srv?.driver?.name || "-"}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400">Status</span>
+            <span className="capitalize">{srv.status}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Amount and Receipt - Full width on mobile */}
+      <div className="mt-3 md:mt-0">
+        <div className="flex justify-between items-center border-t border-gray-600 pt-3 md:hidden">
+          <span className="text-gray-400">Amount</span>
+          <span>
+            {srv.vehicleServicing?.amount?.length > 0
+              ? srv.vehicleServicing.amount
+                .filter(a => a !== null)
+                .map((amt, idx) => (
+                  <div key={idx}>₹{amt}</div>
+                ))
+              : "-"}
+          </span>
+        </div>
+        
+        <div className="flex justify-between items-center border-t border-gray-600 pt-3 md:hidden">
+          <span className="text-gray-400">Receipt</span>
+          <span>
+            {srv.vehicleServicing?.receiptImage?.length > 0
+              ? srv.vehicleServicing.receiptImage.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setReceiptImage(img);
+                      setShowReceiptModal(true);
+                    }}
+                    className="text-blue-400 underline hover:text-blue-300 mr-2"
+                  >
+                    View {idx + 1}
+                  </button>
+                ))
+              : "-"}
+          </span>
+        </div>
+      </div>
+
+      {/* Desktop View (hidden on mobile) */}
+      <div className="hidden md:grid grid-cols-6 gap-4">
+        <div className="text-center">{i + 1}</div>
+        <div className="text-center">{srv?.cab?.cabNumber || "-"}</div>
+        <div className="text-center">{srv?.driver?.name || "-"}</div>
+        <div className="text-center capitalize">{srv.status}</div>
+        <div className="text-center">
+          {srv.vehicleServicing?.amount?.length > 0
+            ? srv.vehicleServicing.amount
+              .filter(a => a !== null)
+              .map((amt, idx) => (
+                <div key={idx}>₹{amt}</div>
+              ))
+            : "-"}
+        </div>
+        <div className="text-center">
+          {srv.vehicleServicing?.receiptImage?.length > 0
+            ? srv.vehicleServicing.receiptImage.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setReceiptImage(img);
+                    setShowReceiptModal(true);
+                  }}
+                  className="text-blue-400 underline hover:text-blue-300 mr-2"
+                >
+                  View Image {idx + 1}
+                </button>
+              ))
+            : "-"}
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
 
         {/* ✅ Assign Modal */}
         {showAssignModal && (

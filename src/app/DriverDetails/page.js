@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -13,6 +12,8 @@ import {
   FiFileText,
   FiImage,
   FiX,
+  FiChevronLeft,
+  FiChevronRight,
 } from "react-icons/fi"
 import { IoIosContact } from "react-icons/io";
 import Sidebar from "../slidebar/page"
@@ -41,11 +42,14 @@ const Driver = () => {
   })
   const [errors, setErrors] = useState({})
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [driversPerPage] = useState(5) // Number of drivers per page
+
   // Add driver form state
   const [addDriverFormData, setAddDriverFormData] = useState({
     name: "",
     email: "",
-    // password: "",
     phone: "",
     licenseNo: "",
     adharNo: "",
@@ -65,7 +69,6 @@ const Driver = () => {
     setModalImage(imageUrl);
     setShowModal(true);
   };
-
 
   useEffect(() => {
     fetchDrivers()
@@ -145,11 +148,6 @@ const Driver = () => {
     setAddDriverErrors({ ...addDriverErrors, [e.target.name]: "" })
   }
 
-  // const handleImageChange = (e) => {
-  // setProfileImage(e.target.files[0])
-  // setAddDriverErrors({ ...addDriverErrors, profileImage: "" })
-  // }
-
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     setProfileImage(e.target.files[0])
@@ -158,6 +156,7 @@ const Driver = () => {
       setProfileImageName(file.name);
     }
   }
+  
   const handleLicenseImageChange = (e) => {
     const file = e.target.files[0];
     setLicenseImage(e.target.files[0])
@@ -177,8 +176,6 @@ const Driver = () => {
     if (!addDriverFormData.name.trim()) newErrors.name = "Name is required"
     if (!addDriverFormData.email.trim()) newErrors.email = "Email is required"
     else if (!/\S+@\S+\.\S+/.test(addDriverFormData.email)) newErrors.email = "Invalid email format"
-    // if (!addDriverFormData.password.trim()) newErrors.password = "Password is required"
-    // else if (addDriverFormData.password.length < 6) newErrors.password = "Password must be at least 6 characters"
     if (!addDriverFormData.phone.trim()) newErrors.phone = "Phone is required"
     else if (!/^\d{10}$/.test(addDriverFormData.phone)) newErrors.phone = "Phone must be 10 digits"
     if (!addDriverFormData.licenseNo.trim()) newErrors.licenseNo = "License No is required"
@@ -209,12 +206,10 @@ const Driver = () => {
       formDataToSend.append("licenseNoImage", licenseImage)
       formDataToSend.append("adharNoImage", adharImage)
 
-
       const response = await fetch("http://localhost:5000/api/register", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
-          // ❌ Don't set 'Content-Type', let the browser set it for FormData
         },
         body: formDataToSend,
       })
@@ -226,7 +221,6 @@ const Driver = () => {
         setAddDriverFormData({
           name: "",
           email: "",
-          // password: "",
           phone: "",
           licenseNo: "",
           adharNo: "",
@@ -257,6 +251,26 @@ const Driver = () => {
       setAddDriverErrors({ apiError: "❌ Server error, try again later" })
     } finally {
       setAddDriverLoading(false)
+    }
+  }
+
+  // Pagination logic
+  const indexOfLastDriver = currentPage * driversPerPage
+  const indexOfFirstDriver = indexOfLastDriver - driversPerPage
+  const currentDrivers = drivers.slice(indexOfFirstDriver, indexOfLastDriver)
+  const totalPages = Math.ceil(drivers.length / driversPerPage)
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber)
+
+  const nextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1)
+    }
+  }
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1)
     }
   }
 
@@ -302,7 +316,7 @@ const Driver = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {drivers.map((driver) => (
+                  {currentDrivers.map((driver) => (
                     <tr key={driver._id} className="border-white hover:bg-gray-700 transition-all">
                       <td className="p-3 text-center">
                         <Image
@@ -312,8 +326,7 @@ const Driver = () => {
                           height={50}
                           className="rounded-full object-cover mx-auto"
                           unoptimized
-                          onClick={() => handleImageClick(driver.profileImage)} // pass correct image
-
+                          onClick={() => handleImageClick(driver.profileImage)}
                         />
                       </td>
                       <td className="p-3 text-white">{driver.name}</td>
@@ -327,7 +340,7 @@ const Driver = () => {
                           height={50}
                           className="rounded object-cover mx-auto"
                           unoptimized
-                          onClick={() => handleImageClick(driver.adharNoImage)} // pass correct image
+                          onClick={() => handleImageClick(driver.adharNoImage)}
                         />
                       </td>
                       <td className="p-3 text-white">{driver.licenseNo}</td>
@@ -339,7 +352,7 @@ const Driver = () => {
                           height={50}
                           className="rounded object-cover mx-auto"
                           unoptimized
-                          onClick={() => handleImageClick(driver.licenseNoImage)} // pass correct image
+                          onClick={() => handleImageClick(driver.licenseNoImage)}
                         />
                       </td>
                       <td className="p-3 text-white">{driver.phone}</td>
@@ -359,7 +372,7 @@ const Driver = () => {
 
             {/* Mobile Card View */}
             <div className="md:hidden space-y-4">
-              {drivers.map((driver) => (
+              {currentDrivers.map((driver) => (
                 <div key={driver._id} className="bg-gray-700 p-4 rounded-lg shadow">
                   <div className="flex items-center space-x-4 mb-3">
                     <Image
@@ -429,12 +442,45 @@ const Driver = () => {
                 </div>
               ))}
             </div>
+
+            {/* Pagination Controls */}
+            {drivers.length > 0 && (
+              <div className="flex justify-center mt-6">
+                <nav className="flex items-center gap-1">
+                  <button
+                    onClick={prevPage}
+                    disabled={currentPage === 1}
+                    className={`p-2 rounded-md ${currentPage === 1 ? 'text-gray-500 cursor-not-allowed' : 'text-white hover:bg-gray-700'}`}
+                  >
+                    <FiChevronLeft size={20} />
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+                    <button
+                      key={number}
+                      onClick={() => paginate(number)}
+                      className={`px-3 py-1 rounded-md ${currentPage === number ? 'bg-indigo-600 text-white' : 'text-white hover:bg-gray-700'}`}
+                    >
+                      {number}
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={nextPage}
+                    disabled={currentPage === totalPages}
+                    className={`p-2 rounded-md ${currentPage === totalPages ? 'text-gray-500 cursor-not-allowed' : 'text-white hover:bg-gray-700'}`}
+                  >
+                    <FiChevronRight size={20} />
+                  </button>
+                </nav>
+              </div>
+            )}
           </>
         )}
 
         {/* Edit Driver Modal */}
         {isEditMode && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-b  bg-black/50 to-transparent backdrop-blur-md bg-opacity-40 p-4">
             <div className="bg-gray-800 text-white rounded-md w-full max-w-md p-6 relative">
               <button
                 className="absolute top-3 right-3 text-gray-300 hover:text-white transition-all duration-300"
@@ -481,7 +527,7 @@ const Driver = () => {
           </div>
         )}
 
-        {/* //show image model */}
+        {/* Show image modal */}
         {showModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 bg-black/50 to-transparent backdrop-blur-md">
             <div className="bg-white rounded-lg p-4 max-w-md w-full relative">
@@ -530,7 +576,6 @@ const Driver = () => {
                   {[
                     { name: "name", icon: FiUser, placeholder: "Name" },
                     { name: "email", icon: FiMail, placeholder: "Email", type: "email" },
-                    // { name: "password", icon: FiLock, placeholder: "Password", type: "password" },
                     { name: "phone", icon: FiPhone, placeholder: "Phone" },
                     { name: "licenseNo", icon: FiCreditCard, placeholder: "License No" },
                     { name: "adharNo", icon: FiFileText, placeholder: "Aadhar No" },
@@ -554,9 +599,7 @@ const Driver = () => {
                   ))}
 
                   <div className="col-span-1 md:col-span-2 relative">
-                    <span className="absolute left-3 top-3 text-gray-400">
-
-                    </span>
+                    <span className="absolute left-3 top-3 text-gray-400"></span>
                     <label
                       htmlFor="profileInput"
                       className="flex items-center gap-2 w-full p-3 pl-4 bg-gray-700 text-white border border-gray-600 rounded-lg cursor-pointer hover:bg-gray-600 focus:ring-2 focus:ring-indigo-400"
@@ -578,8 +621,6 @@ const Driver = () => {
                       <p className="text-red-400 text-sm mt-1">{addDriverErrors.profileImage}</p>
                     )}
                   </div>
-
-
 
                   <div className="col-span-1 md:col-span-2 relative">
                     <span className="absolute left-3 top-3 text-gray-400"></span>
@@ -608,9 +649,8 @@ const Driver = () => {
                     )}
                   </div>
 
-                  {/* Adhar Image */}
                   <div className="col-span-1 md:col-span-2 relative">
-                    <span className="absolute left-3 top-3 text-gray-400">    </span>
+                    <span className="absolute left-3 top-3 text-gray-400"></span>
                     <label
                       htmlFor="adharInput"
                       className="flex items-center gap-2 w-full p-3 pl-4 bg-gray-700 text-white border border-gray-600 rounded-lg cursor-pointer hover:bg-gray-600 focus:ring-2 focus:ring-indigo-400"
@@ -659,4 +699,5 @@ const Driver = () => {
     </div>
   )
 }
+
 export default Driver
