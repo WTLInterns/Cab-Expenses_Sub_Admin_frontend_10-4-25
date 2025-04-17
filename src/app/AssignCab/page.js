@@ -6,6 +6,7 @@ import axios from "axios"
 import Sidebar from "../slidebar/page"
 import { motion } from "framer-motion"
 import { FaCar, FaClipboardList, FaCalendarAlt, FaUpload, FaPlus } from "react-icons/fa"
+import baseURL from "@/utils/api"
 
 export default function AssignCab() {
   const [drivers, setDrivers] = useState([])
@@ -52,10 +53,10 @@ export default function AssignCab() {
         }
 
         const [driversRes, cabsRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/driver/profile", {
+          axios.get(`${baseURL}api/driver/profile`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          axios.get("http://localhost:5000/api/cabDetails", {
+          axios.get(`${baseURL}api/cabDetails`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ])
@@ -89,7 +90,7 @@ export default function AssignCab() {
       }
 
       const response = await axios.post(
-        "http://localhost:5000/api/assigncab/",
+        `${baseURL}api/assigncab/`,
         {
           driverId: selectedDriver,
           cabNumber: selectedCab,
@@ -152,7 +153,7 @@ export default function AssignCab() {
         }
       })
   
-      const response = await fetch("http://localhost:5000/api/cabDetails/add", {
+      const response = await fetch(`${baseURL}api/cabDetails/add`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` }, // Do NOT set 'Content-Type' manually
         body: formDataToSend,

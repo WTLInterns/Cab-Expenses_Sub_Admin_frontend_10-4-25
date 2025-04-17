@@ -7,6 +7,7 @@ import { PDFDownloadLink } from "@react-pdf/renderer";
 import InvoicePDF from "../components/InvoicePDF";
 import { MapPin, X } from "lucide-react";
 import LeafletMap from "../components/LeafletMap";
+import baseURL from "@/utils/api";
 
 // Create a driver location storage
 const driverLocations = {};
@@ -109,7 +110,7 @@ const CabSearch = () => {
     const fetchAdminData = async () => {
       try {
         const id = localStorage.getItem("id");
-        const res = await axios.get("http://localhost:5000/api/admin/getAllSubAdmins");
+        const res = await axios.get(`${baseURL}api/admin/getAllSubAdmins`);
         const admin = res.data.subAdmins.find((el) => el._id === id);
 
         if (admin) {
@@ -131,7 +132,7 @@ const CabSearch = () => {
     const fetchAssignedCabs = async () => {
       setLoading(true)
       try {
-        const res = await axios.get("http://localhost:5000/api/assigncab", {
+        const res = await axios.get(`${baseURL}api/assigncab`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         })
 
@@ -982,45 +983,45 @@ const CabSearch = () => {
           </>
         )
 
-        case "vehicleServicing":
-          return (
-            <>
-              <div className="mb-4">
-                <p>
-                  <span className="text-gray-400">Required Service:</span>{" "}
-                  {data.requiredService ? "Yes" : "No"}
-                </p>
-                <p>
-                  <span className="text-gray-400">Details:</span> {data.details || "N/A"}
-                </p>
-        
-                {/* Service Images */}
-                {data.image && Array.isArray(data.image) && data.image.length > 0 && (
-                  <>
-                    <h3 className="text-lg font-semibold mt-4 mb-2">OdoMeter Images</h3>
-                    {renderImageGallery(data.image)}
-                  </>
-                )}
-        
-                {/* Receipt Images */}
-                {data.receiptImage && Array.isArray(data.receiptImage) && data.receiptImage.length > 0 && (
-                  <>
-                    <h3 className="text-lg font-semibold mt-4 mb-2">Vehicle Receipt Images</h3>
-                    {renderImageGallery(data.receiptImage)}
-                  </>
-                )}
+      case "vehicleServicing":
+        return (
+          <>
+            <div className="mb-4">
+              <p>
+                <span className="text-gray-400">Required Service:</span>{" "}
+                {data.requiredService ? "Yes" : "No"}
+              </p>
+              <p>
+                <span className="text-gray-400">Details:</span> {data.details || "N/A"}
+              </p>
 
-                 {/* Total Service Amount */}
-                 {data.amount && Array.isArray(data.amount) && data.amount.length > 0 && (
-                  <p>
-                    <span className="text-gray-400">Total Amount:</span>{" "}
-                    ₹{data.amount.reduce((acc, curr) => acc + Number(curr || 0), 0)}
-                  </p>
-                )}
-              </div>
-            </>
-          );
-        
+              {/* Service Images */}
+              {data.image && Array.isArray(data.image) && data.image.length > 0 && (
+                <>
+                  <h3 className="text-lg font-semibold mt-4 mb-2">OdoMeter Images</h3>
+                  {renderImageGallery(data.image)}
+                </>
+              )}
+
+              {/* Receipt Images */}
+              {data.receiptImage && Array.isArray(data.receiptImage) && data.receiptImage.length > 0 && (
+                <>
+                  <h3 className="text-lg font-semibold mt-4 mb-2">Vehicle Receipt Images</h3>
+                  {renderImageGallery(data.receiptImage)}
+                </>
+              )}
+
+              {/* Total Service Amount */}
+              {data.amount && Array.isArray(data.amount) && data.amount.length > 0 && (
+                <p>
+                  <span className="text-gray-400">Total Amount:</span>{" "}
+                  ₹{data.amount.reduce((acc, curr) => acc + Number(curr || 0), 0)}
+                </p>
+              )}
+            </div>
+          </>
+        );
+
 
 
       case "otherProblems":
@@ -1181,7 +1182,17 @@ const CabSearch = () => {
                         <td className="p-3">
                           {item.cab?.location?.from || "N/A"} → {item.cab?.location?.to || "N/A"}
                         </td>
-                        <td className="p-3">{item?.status} </td>
+                        {/* <td className="p-3 text-green-500" >{item?.status} </td> */}
+                        <td
+                          className={`p-3 ${item?.status === "assigned"
+                              ? "text-red-500 border-white"
+                              : item?.status === "completed"
+                                ? "text-green-500 border-white"
+                                : "text-gray-700 border-white"
+                            }`}
+                        >
+                          {item?.status}
+                        </td>
                         <td className="p-3">
                           <select
                             className="border p-1 rounded bg-gray-800 text-white"

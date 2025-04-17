@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Sidebar from "../slidebar/page";
 import { FaCar, FaClipboardList, FaCalendarAlt, FaUpload } from "react-icons/fa";
 import { motion } from "framer-motion";
+import baseURL from "../../utils/";
 
 const AddCab = () => {
     const [formData, setFormData] = useState({
@@ -61,7 +62,7 @@ const AddCab = () => {
                 formDataToSend.append(key, formData[key]);
             });
 
-            const response = await fetch("http://localhost:5000/api/cabDetails/add", {
+            const response = await fetch(`${baseURL}api/cabDetails/add`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}` },
                 body: formDataToSend,

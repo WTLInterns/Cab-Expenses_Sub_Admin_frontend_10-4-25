@@ -12,6 +12,7 @@ import "react-toastify/dist/ReactToastify.css"
 import { motion } from "framer-motion"
 import axios from 'axios';
 import { FiMenu, FiUser, FiTruck, FiLogOut, FiSettings, FiX } from 'react-icons/fi';
+import baseURL from "@/utils/api"
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -34,7 +35,7 @@ const Sidebar = () => {
 
     const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/admin/getAllSubAdmins');
+        const response = await axios.get(`${baseURL}api/admin/getAllSubAdmins`);
         const allSubAdmins = response.data.subAdmins;
 
         const matched = allSubAdmins.find((elm) => elm._id === id);

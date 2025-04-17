@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import Sidebar from "../slidebar/page";
 import axios from "axios";
 import { motion } from "framer-motion";
+import baseURL from "@/utils/api";
 
 export default function CabService() {
   const [drivers, setDrivers] = useState([]);
@@ -27,13 +28,13 @@ export default function CabService() {
   const fetchInitialData = async () => {
     try {
       const [driversRes, cabsRes, servicesRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/driver/profile", {
+        axios.get(`${baseURL}api/driver/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("http://localhost:5000/api/cabDetails", {
+        axios.get(`${baseURL}api/cabDetails`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get("http://localhost:5000/api/servicing", {
+        axios.get(`${baseURL}api/servicing`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -70,7 +71,7 @@ export default function CabService() {
 
     try {
       await axios.post(
-        "http://localhost:5000/api/servicing/assign",
+        `${baseURL}api/servicing/assign`,
         { cabId: selectedCab, driverId: selectedDriver, assignedBy },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -194,12 +195,12 @@ export default function CabService() {
                 <button
                   key={idx}
                   onClick={() => {
-                    setReceiptImage(img);
+                    setReceiptImage(img); 
                     setShowReceiptModal(true);
                   }}
                   className="text-blue-400 underline hover:text-blue-300 mr-2"
                 >
-                  View Image {idx + 1}
+                  View {idx + 1}
                 </button>
               ))
             : "-"}

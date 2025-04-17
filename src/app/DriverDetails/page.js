@@ -22,6 +22,7 @@ import { ToastContainer, toast } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import axios from "axios"
 import { motion } from "framer-motion"
+import baseURL from "@/utils/api"
 
 const Driver = () => {
   // Driver list state
@@ -89,7 +90,7 @@ const Driver = () => {
 
     try {
       setLoading(true)
-      const res = await axios.get("http://localhost:5000/api/driver/profile", {
+      const res = await axios.get(`${baseURL}api/driver/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       setDrivers(res.data)
@@ -113,7 +114,7 @@ const Driver = () => {
     if (!window.confirm("Are you sure you want to delete this driver?")) return
 
     try {
-      await axios.delete(`http://localhost:5000/api/driver/profile/${id}`, {
+      await axios.delete(`${baseURL}api/driver/profile/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       })
 
@@ -127,7 +128,7 @@ const Driver = () => {
 
   const handleEditSubmit = async () => {
     try {
-      await axios.put(`http://localhost:5000/api/driver/profile/${editFormData._id}`, editFormData, {
+      await axios.put(`${baseURL}api/driver/profile/${editFormData._id}`, editFormData, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       })
 
@@ -206,7 +207,7 @@ const Driver = () => {
       formDataToSend.append("licenseNoImage", licenseImage)
       formDataToSend.append("adharNoImage", adharImage)
 
-      const response = await fetch("http://localhost:5000/api/register", {
+      const response = await fetch(`${baseURL}api/register`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
