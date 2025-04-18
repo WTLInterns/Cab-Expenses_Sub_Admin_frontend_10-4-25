@@ -117,9 +117,9 @@ const styles = StyleSheet.create({
     lineHeight: 1.5,
   },
   signBox: {
-    width: 120,
-    marginTop: 30,
-    height: 80,
+    width: 110,
+    marginTop: 20,
+    height: 100,
   },
 })
 

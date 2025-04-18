@@ -8,6 +8,11 @@ import InvoicePDF from "../components/InvoicePDF";
 import { MapPin, X } from "lucide-react";
 import LeafletMap from "../components/LeafletMap";
 import baseURL from "@/utils/api";
+import Image from 'next/image';
+import { useCallback } from "react";
+
+
+
 
 // Create a driver location storage
 const driverLocations = {};
@@ -73,12 +78,12 @@ const CabSearch = () => {
     }
   }, []);
 
-  const generateInvoiceNumber = (companyName) => {
+  const generateInvoiceNumber = useCallback((companyName) => {
     const prefix = derivePrefix(companyName);        // e.g. "REP"
     const finYear = getFinancialYear();              // e.g. "2526"
     const randomNum = Math.floor(100000 + Math.random() * 900000); // 6-digit random number
     return `${prefix}${finYear}-${randomNum}`;
-  };
+  }, []);
 
   const derivePrefix = (name) => {
     if (!name) return "INV";
@@ -126,8 +131,11 @@ const CabSearch = () => {
     };
 
     fetchAdminData();
-  }, []);
-
+  },[generateInvoiceNumber]);
+  
+ 
+  
+  
   useEffect(() => {
     const fetchAssignedCabs = async () => {
       setLoading(true)
@@ -654,9 +662,6 @@ const CabSearch = () => {
   };
 
   const handleLocationClick = (item) => {
-    console.log("🚗 Opening map for driver:", item.driver?.name);
-    console.log("📍 Driver location data:", item.driver?.location);
-    console.log("🗺️ Route information:", item.cab?.location);
 
     // Make sure we have a valid driver
     if (!item.driver) {
@@ -686,8 +691,8 @@ const CabSearch = () => {
         ...item.cab,
         // Ensure route information is properly formatted
         location: {
-          from: item.cab?.location?.from || "Kolhapur",
-          to: item.cab?.location?.to || "Mumbai",
+          from: item.cab?.location?.from || "Pune",
+          to: item.cab?.location?.to || "Pune",
           totalDistance: item.cab?.location?.totalDistance ||
             calculateRouteDistance(item.cab?.location?.from, item.cab?.location?.to)
         }
@@ -876,7 +881,7 @@ const CabSearch = () => {
       <div className="flex flex-wrap gap-2 mt-2">
         {images.map((image, index) => (
           <div key={index} onClick={() => openImageModal(image)} className="cursor-pointer">
-            <img
+            <Image
               src={image || "/placeholder.svg"}
               alt={`Image ${index + 1}`}
               className="w-24 h-24 object-cover rounded border border-gray-600 hover:border-blue-500 transition-all"
@@ -1058,7 +1063,7 @@ const CabSearch = () => {
                   )
                 ) : typeof value === "string" && value.match(/\.(jpeg|jpg|gif|png)$/) ? (
                   <div className="mt-2 cursor-pointer" onClick={() => openImageModal(value)}>
-                    <img
+                    <Image
                       src={value || "/placeholder.svg"}
                       alt={key}
                       className="w-full h-auto rounded border border-gray-600 hover:border-blue-500 transition-all"
@@ -1188,7 +1193,7 @@ const CabSearch = () => {
                               ? "text-red-500 border-white"
                               : item?.status === "completed"
                                 ? "text-green-500 border-white"
-                                : "text-gray-700 border-white"
+                                : "text-green-500 border-white"
                             }`}
                         >
                           {item?.status}
@@ -1371,7 +1376,7 @@ const CabSearch = () => {
                 </button>
               </div>
               <div className="border border-gray-700 rounded-lg overflow-hidden">
-                <img
+                <Image
                   src={selectedImage || "/placeholder.svg"}
                   alt="Preview"
                   className="max-w-full max-h-[70vh] object-contain mx-auto"

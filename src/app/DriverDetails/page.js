@@ -17,12 +17,13 @@ import {
 } from "react-icons/fi"
 import { IoIosContact } from "react-icons/io";
 import Sidebar from "../slidebar/page"
-import Image from "next/image"
 import { ToastContainer, toast } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import axios from "axios"
 import { motion } from "framer-motion"
 import baseURL from "@/utils/api"
+import Image from "next/image"
+
 
 const Driver = () => {
   // Driver list state
@@ -538,7 +539,7 @@ const Driver = () => {
               >
                 ✕
               </button>
-              <img
+              <Image
                 src={modalImage}
                 alt="Preview"
                 className="w-full h-[400px] object-contain rounded-lg border-4 border-gray-300 shadow-lg"

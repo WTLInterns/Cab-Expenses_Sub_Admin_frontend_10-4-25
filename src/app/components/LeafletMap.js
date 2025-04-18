@@ -112,7 +112,7 @@ const LeafletMap = ({
       routeFrom,
       routeTo
     });
-  }, []);
+  }, [cabNumber, driverName, location, routeFrom, routeTo]);
   
   // Add state for route path
   const [routePath, setRoutePath] = useState([]);

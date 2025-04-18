@@ -413,7 +413,7 @@ const Login = () => {
                     }}
                     className="text-sm text-blue-300 hover:text-blue-200 transition-colors"
                   >
-                    Didn't receive OTP? Try again
+                    Did not receive OTP? Try again
                   </button>
                 </div>
               </form>

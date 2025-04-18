@@ -13,6 +13,8 @@ import { motion } from "framer-motion"
 import axios from 'axios';
 import { FiMenu, FiUser, FiTruck, FiLogOut, FiSettings, FiX } from 'react-icons/fi';
 import baseURL from "@/utils/api"
+import Image from 'next/image';
+
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -89,20 +91,22 @@ const Sidebar = () => {
     <>
       {/* Mobile Navbar - Only shown on mobile */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-indigo-500 to-indigo-700 bg-opacity-90 backdrop-blur-sm p-4 flex justify-between items-center border-b border-gray-700">
-      <div className="flex items-center gap-4">
-              {companyLogo?.trim() ? (
-                <img
-                  src={companyLogo}
-                  alt="Company Logo"
-                  className="w-12 h-12 rounded-full border-4 border-white"
-                />
-              ) : (
-                <span className="text-white text-sm italic">No Logo</span>
-              )}
-              <span className="text-white text-lg font-semibold">
-                {companyName || ""}
-              </span>
-            </div>
+        <div className="flex items-center gap-4">
+          {companyLogo?.trim() ? (
+            <Image
+              src={companyLogo}
+              alt="Company Logo"
+              width={48}
+              height={48}
+              className="w-12 h-12 rounded-full border-4 border-white"
+            />
+          ) : (
+            <span className="text-white text-sm italic">No Logo</span>
+          )}
+          <span className="text-white text-lg font-semibold">
+            {companyName || ""}
+          </span>
+        </div>
         <button
           onClick={() => setIsOpen(!isOpen)}
           className="text-white text-2xl p-1 rounded-full hover:bg-gray-800 transition-all"
@@ -119,31 +123,32 @@ const Sidebar = () => {
       {/* Sidebar - Different positioning for mobile and desktop */}
       <aside
         className={`
-          fixed md:fixed z-40 
-          h-[calc(100vh-0px)] md:h-screen 
-          transition-all duration-300 
-          ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-        `}
+            fixed md:fixed z-40 
+            h-[calc(100vh-0px)] md:h-screen 
+            transition-all duration-300 
+            ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+          `}
       >
         <div
           className={`  
-            h-full w-64 
-            flex flex-col 
-            bg-black backdrop-blur-lg shadow-lg 
-            border-r border-gray-700 border-opacity-40 
-            transition-opacity duration-300
-            ${isOpen ? "opacity-100" : "md:opacity-100 opacity-0"}
-          `}
+              h-full w-64 
+              flex flex-col 
+              bg-black backdrop-blur-lg shadow-lg 
+              border-r border-gray-700 border-opacity-40 
+              transition-opacity duration-300
+              ${isOpen ? "opacity-100" : "md:opacity-100 opacity-0"}
+            `}
         >
           {/* Header - Hidden on mobile since it's in the navbar */}
           <div className="hidden md:block sticky top-0 z-10 bg-black px-4 py-3 border-b border-gray-700">
             <div className="flex items-center gap-4">
               {companyLogo?.trim() ? (
-                <img
+                <Image
                   src={companyLogo}
                   alt="Company Logo"
-                  className="w-12 h-12 rounded-full border-4 border-white"
-                />
+                  width={48}
+                  height={48}
+                  className="w-12 h-12 rounded-full border-4 border-white"                />
               ) : (
                 <span className="text-white text-sm italic">No Logo</span>
               )}
