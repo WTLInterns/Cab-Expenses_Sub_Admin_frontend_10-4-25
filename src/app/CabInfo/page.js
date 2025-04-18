@@ -144,6 +144,7 @@ const CabSearch = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         })
 
+        console.log(res.data)
         setCabDetails(res.data)
         setFilteredCabs(res.data)
         // Fetch route coordinates for all cabs
@@ -706,7 +707,7 @@ const CabSearch = () => {
   const calculateRouteDistance = (from, to) => {
     // Define some common routes and their distances
     const commonRoutes = {
-      "Kolhapur-Mumbai": 375,
+      "Pune-Mumbai": 375,
       "Mumbai-Kolhapur": 375,
       "Kolhapur-Pune": 230,
       "Pune-Kolhapur": 230,
@@ -1189,7 +1190,7 @@ const CabSearch = () => {
                           {item.assignedAt ? new Date(item.assignedAt).toLocaleDateString() : "N/A"}
                         </td>
                         <td className="p-3">
-                          {item.cab?.location?.from || "N/A"} → {item.cab?.location?.to || "N/A"}
+                          {item.tripDetails?.location?.from || "N/A"} → {item.tripDetails?.location?.to || "N/A"}
                         </td>
                         {/* <td className="p-3 text-green-500" >{item?.status} </td> */}
                         <td
@@ -1205,7 +1206,7 @@ const CabSearch = () => {
                         <td className="p-3">
                           <select
                             className="border p-1 rounded bg-gray-800 text-white"
-                            onChange={(e) => e.target.value && openModal(e.target.value, item.cab[e.target.value])}
+                            onChange={(e) => e.target.value && openModal(e.target.value, item.tripDetails[e.target.value])}
                           >
                             <option value="">Select</option>
                             <option value="fuel">Fuel</option>
@@ -1285,13 +1286,13 @@ const CabSearch = () => {
                       </div>
                       <div>
                         <p className="text-gray-400 text-sm">Distance</p>
-                        <p>{item.cab?.location?.totalDistance || "0"} KM</p>
+                        <p>{item.tripDetails?.location?.totalDistance || "0"} KM</p>
                       </div>
                     </div>
                     <div className="mb-3">
                       <p className="text-gray-400 text-sm">Route</p>
                       <p>
-                        {item.cab?.location?.from || "N/A"} → {item.cab?.location?.to || "N/A"}
+                        {item.tripDetails?.location?.from || "N/A"} → {item.tripDetails?.location?.to || "N/A"}
                       </p>
                     </div>
                     <div className="flex gap-2 mb-2">
@@ -1430,8 +1431,8 @@ const CabSearch = () => {
                   location={selectedDriver.driver?.location}
                   driverName={selectedDriver.driver?.name}
                   cabNumber={selectedDriver.cab?.cabNumber}
-                  routeFrom={selectedDriver.cab?.location?.from}
-                  routeTo={selectedDriver.cab?.location?.to}
+                  routeFrom={selectedDriver.tripDetails?.location?.from}
+                  routeTo={selectedDriver.tripDetails?.location?.to}
                   onMapReady={(map) => {
                     console.log("Map is ready", map);
                     // Force a resize to ensure the map renders correctly
@@ -1453,7 +1454,7 @@ const CabSearch = () => {
                     <p className="text-sm font-semibold text-gray-800">Driver: {selectedDriver.driver?.name || "N/A"}</p>
                     <p className="text-sm font-semibold text-gray-800">Cab Number: {selectedDriver.cab?.cabNumber || "N/A"}</p>
                     <p className="text-sm font-semibold text-gray-800">
-                      Distance: {selectedDriver.cab?.location?.totalDistance ||
+                      Distance: {selectedDriver.tripDetails?.location?.totalDistance ||
                         (driverRoutes[selectedDriver.driver?.id]?.totalDistance) || "0"} KM
                     </p>
                   </div>
