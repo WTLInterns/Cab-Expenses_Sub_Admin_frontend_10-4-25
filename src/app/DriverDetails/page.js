@@ -158,7 +158,7 @@ const Driver = () => {
       setProfileImageName(file.name);
     }
   }
-  
+
   const handleLicenseImageChange = (e) => {
     const file = e.target.files[0];
     setLicenseImage(e.target.files[0])
@@ -542,6 +542,8 @@ const Driver = () => {
               <Image
                 src={modalImage}
                 alt="Preview"
+                width={200}
+                height={200}
                 className="w-full h-[400px] object-contain rounded-lg border-4 border-gray-300 shadow-lg"
               />
             </div>

@@ -131,11 +131,11 @@ const CabSearch = () => {
     };
 
     fetchAdminData();
-  },[generateInvoiceNumber]);
-  
- 
-  
-  
+  }, [generateInvoiceNumber]);
+
+
+
+
   useEffect(() => {
     const fetchAssignedCabs = async () => {
       setLoading(true)
@@ -884,6 +884,8 @@ const CabSearch = () => {
             <Image
               src={image || "/placeholder.svg"}
               alt={`Image ${index + 1}`}
+              width={200}
+              height={400}
               className="w-24 h-24 object-cover rounded border border-gray-600 hover:border-blue-500 transition-all"
             />
           </div>
@@ -1066,6 +1068,8 @@ const CabSearch = () => {
                     <Image
                       src={value || "/placeholder.svg"}
                       alt={key}
+                      width={200}
+                      height={400}
                       className="w-full h-auto rounded border border-gray-600 hover:border-blue-500 transition-all"
                     />
                   </div>
@@ -1190,10 +1194,10 @@ const CabSearch = () => {
                         {/* <td className="p-3 text-green-500" >{item?.status} </td> */}
                         <td
                           className={`p-3 ${item?.status === "assigned"
-                              ? "text-red-500 border-white"
-                              : item?.status === "completed"
-                                ? "text-green-500 border-white"
-                                : "text-green-500 border-white"
+                            ? "text-red-500 border-white"
+                            : item?.status === "completed"
+                              ? "text-green-500 border-white"
+                              : "text-green-500 border-white"
                             }`}
                         >
                           {item?.status}
@@ -1379,6 +1383,8 @@ const CabSearch = () => {
                 <Image
                   src={selectedImage || "/placeholder.svg"}
                   alt="Preview"
+                  width={200}
+                  height={400}
                   className="max-w-full max-h-[70vh] object-contain mx-auto"
                 />
               </div>
