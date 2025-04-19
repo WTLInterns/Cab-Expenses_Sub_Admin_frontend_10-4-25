@@ -1,18 +1,13 @@
-
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Sidebar from "../slidebar/page";
 import axios from "axios";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import InvoicePDF from "../components/InvoicePDF";
-import { MapPin, X } from "lucide-react";
+import { MapPin, X } from 'lucide-react';
 import LeafletMap from "../components/LeafletMap";
 import baseURL from "@/utils/api";
 import Image from 'next/image';
-import { useCallback } from "react";
-
-
-
 
 // Create a driver location storage
 const driverLocations = {};
@@ -56,6 +51,119 @@ const CabSearch = () => {
   const markerRef = useRef(null)
   const routeLayerRef = useRef(null)
   const routeMarkersRef = useRef([])
+
+  // Define showNotification callback first since it's used in other functions
+  const showNotification = useCallback((msg) => {
+    setNotification(msg);
+    setTimeout(() => setNotification(""), 3000);
+  }, []);
+
+  // Define cleanupMap callback before it's used
+  const cleanupMap = useCallback(() => {
+    // Clean up Leaflet map if it exists
+    if (mapRef.current && typeof mapRef.current.remove === 'function') {
+      mapRef.current.remove();
+    }
+
+    // Reset references
+    mapRef.current = null;
+    markerRef.current = null;
+
+    if (routeLayerRef.current) {
+      routeLayerRef.current = null;
+    }
+
+    // Clear route markers
+    routeMarkersRef.current = [];
+  }, []);
+
+  // Define initializeMap callback before it's used in useEffect
+  const initializeMap = useCallback(() => {
+    if (typeof window === "undefined" || !window.L) {
+      console.log("Leaflet not loaded yet");
+      return;
+    }
+  
+    const L = window.L;
+    const mapContainer = document.getElementById("map-container");
+  
+    if (!mapContainer) {
+      return;
+    }
+  
+    // Set explicit height to ensure the container is visible
+    mapContainer.style.height = "100%";
+    mapContainer.style.width = "100%";
+  
+    // Clean up any existing map
+    cleanupMap();
+  
+    try {
+      // Get the current driver's location
+      const driverLocation = selectedDriver?.driver?.location;
+  
+      // Check if driver's location is available
+      if (!driverLocation) {
+        console.error("Driver location is not available.");
+        return; // Exit if no location is available
+      }
+  
+      // Create the map using Leaflet and zoom directly to the driver's location
+      const map = L.map("map-container").setView(
+        [driverLocation.latitude, driverLocation.longitude],
+        15 // Zoom level to directly focus on the driver's location
+      );
+  
+      // Add OpenStreetMap tiles
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+  
+      // Create custom marker icon for driver
+      const driverIcon = L.icon({
+        iconUrl: "https://maps.google.com/mapfiles/ms/micons/cabs.png",
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32],
+      });
+  
+      // Create marker for the driver's current position
+      const marker = L.marker([driverLocation.latitude, driverLocation.longitude], {
+        icon: driverIcon,
+      }).addTo(map);
+  
+      // Add popup with driver and route information
+      marker
+        .bindPopup(
+          `
+          <div style="color: #333; padding: 8px; min-width: 200px;">
+            <strong style="font-size: 14px;">${selectedDriver.driver?.name || "Driver"}</strong><br>
+            <div style="margin-top: 5px;">
+              <strong>Cab:</strong> ${selectedDriver.cab?.cabNumber || "N/A"}<br>
+              <strong>Current Location:</strong> (${driverLocation.latitude.toFixed(6)}, ${driverLocation.longitude.toFixed(6)})<br>
+            </div>
+          </div>
+        `
+        )
+        .openPopup();
+  
+      // Save references for future use
+      mapRef.current = map;
+      markerRef.current = marker;
+  
+      // Force a resize to ensure the map renders correctly
+      setTimeout(() => {
+        if (mapRef.current) {
+          mapRef.current.invalidateSize();
+        }
+      }, 100);
+  
+    } catch (error) {
+      console.error("Error initializing map:", error);
+      showNotification("Error initializing map");
+    }
+  }, [selectedDriver, cleanupMap, showNotification]);
 
   // Load Leaflet when component mounts
   useEffect(() => {
@@ -109,8 +217,6 @@ const CabSearch = () => {
     return `${fyStartShort}${fyEndShort}`; // "2526"
   };
 
-
-
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
@@ -132,9 +238,6 @@ const CabSearch = () => {
 
     fetchAdminData();
   }, [generateInvoiceNumber]);
-
-
-
 
   useEffect(() => {
     const fetchAssignedCabs = async () => {
@@ -278,20 +381,20 @@ const CabSearch = () => {
             if (data.type === "location") {
               console.log("helloo");
 
-
-
-              setSelectedDriver((prev) => ({
-                ...prev,
-                driver: {
-                  //    ...prev.driver,
-                  location: {
-                    latitude: data.location.latitude,
-                    longitude: data.location.longitude,
-                    timestamp: data.location.timestamp || new Date().toISOString(),
+              setSelectedDriver((prev) => {
+                if (!prev) return prev;
+                return {
+                  ...prev,
+                  driver: {
+                    ...prev.driver,
+                    location: {
+                      latitude: data.location.latitude,
+                      longitude: data.location.longitude,
+                      timestamp: data.location.timestamp || new Date().toISOString(),
+                    },
                   },
-                },
-              }));
-              // }
+                };
+              });
             }
           } catch (error) {
             console.error("Error parsing WebSocket message:", error);
@@ -332,9 +435,9 @@ const CabSearch = () => {
   // Initialize map when showing it and Leaflet is loaded
   useEffect(() => {
     if (showMap && selectedDriver && mapLoaded) {
-      initializeMap(); // Call to initialize the map and zoom to driver's location
+      initializeMap();
     }
-  }, [showMap, selectedDriver, mapLoaded]);
+  }, [showMap, selectedDriver, mapLoaded, initializeMap]);
 
   // Calculate position along the route based on progress
   const calculatePositionAlongRoute = (from, to, progress) => {
@@ -342,19 +445,13 @@ const CabSearch = () => {
     const longitude = from.lng + (to.lng - from.lng) * progress;
 
     console.log("Latitude:", latitude);
-    console.log("Longitude:", longitude)
-    // return {
-    // latitude: from.lat + (to.lat - from.lat) * progress,
-    // longitude: from.lng + (to.lng - from.lng) * progress,
-    // timestamp: new Date().toISOString(),
+    console.log("Longitude:", longitude);
+    
     return {
       latitude,
       longitude,
       timestamp: new Date().toISOString(),
     };
-
-
-    // };
   };
 
   // Add this function to handle map ready event
@@ -367,7 +464,6 @@ const CabSearch = () => {
       startLocationTracking(selectedDriver);
     }
   };
-
 
   // Update distance calculations based on current location
   const updateDistanceCalculations = (driverId, location) => {
@@ -491,112 +587,6 @@ const CabSearch = () => {
     return initialLocation;
   };
 
-  const cleanupMap = () => {
-    // Clean up Leaflet map if it exists
-    if (mapRef.current && typeof mapRef.current.remove === 'function') {
-      mapRef.current.remove();
-    }
-
-    // Reset references
-    mapRef.current = null;
-    markerRef.current = null;
-
-    if (routeLayerRef.current) {
-      routeLayerRef.current = null;
-    }
-
-    // Clear route markers
-    routeMarkersRef.current = [];
-  };
-
-
-  const initializeMap = () => {
-    if (typeof window === "undefined" || !window.L) {
-      console.log("Leaflet not loaded yet");
-      return;
-    }
-
-    const L = window.L;
-    const mapContainer = document.getElementById("map-container");
-
-    if (!mapContainer) {
-      return;
-    }
-
-    // Set explicit height to ensure the container is visible
-    mapContainer.style.height = "100%";
-    mapContainer.style.width = "100%";
-
-    // Clean up any existing map
-    cleanupMap();
-
-    try {
-      // Get the current driver's location
-      const driverLocation = selectedDriver.driver?.location;
-
-      // Check if driver's location is available
-      if (!driverLocation) {
-        console.error("Driver location is not available.");
-        return; // Exit if no location is available
-      }
-
-      // Create the map using Leaflet and zoom directly to the driver's location
-      const map = L.map("map-container").setView(
-        [driverLocation.latitude, driverLocation.longitude],
-        15 // Zoom level to directly focus on the driver's location
-      );
-
-      // Add OpenStreetMap tiles
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution:
-          '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(map);
-
-      // Create custom marker icon for driver
-      const driverIcon = L.icon({
-        iconUrl: "https://maps.google.com/mapfiles/ms/micons/cabs.png",
-        iconSize: [32, 32],
-        iconAnchor: [16, 32],
-        popupAnchor: [0, -32],
-      });
-
-      // Create marker for the driver's current position
-      const marker = L.marker([driverLocation.latitude, driverLocation.longitude], {
-        icon: driverIcon,
-      }).addTo(map);
-
-      // Add popup with driver and route information
-      marker
-        .bindPopup(
-          `
-          <div style="color: #333; padding: 8px; min-width: 200px;">
-            <strong style="font-size: 14px;">${selectedDriver.driver?.name || "Driver"}</strong><br>
-            <div style="margin-top: 5px;">
-              <strong>Cab:</strong> ${selectedDriver.cab?.cabNumber || "N/A"}<br>
-              <strong>Current Location:</strong> (${driverLocation.latitude.toFixed(6)}, ${driverLocation.longitude.toFixed(6)})<br>
-            </div>
-          </div>
-        `
-        )
-        .openPopup();
-
-      // Save references for future use
-      mapRef.current = map;
-      markerRef.current = marker;
-
-      // Force a resize to ensure the map renders correctly
-      setTimeout(() => {
-        if (mapRef.current) {
-          mapRef.current.invalidateSize();
-        }
-      }, 100);
-
-    } catch (error) {
-      console.error("Error initializing map:", error);
-      showNotification("Error initializing map");
-    }
-  };
-
   // Add waypoints along the route to make it more detailed
   const addWaypointsAlongRoute = (route, map, L) => {
     if (!route || !map || !L) return;
@@ -657,13 +647,7 @@ const CabSearch = () => {
     mapRef.current.setZoom(15); // Set zoom level to 15 for better visibility
   };
 
-  const showNotification = (msg) => {
-    setNotification(msg);
-    setTimeout(() => setNotification(""), 3000);
-  };
-
   const handleLocationClick = (item) => {
-
     // Make sure we have a valid driver
     if (!item.driver) {
       showNotification("⚠️ No driver information available");
@@ -770,24 +754,18 @@ const CabSearch = () => {
 
         wsRef.current.send(JSON.stringify(locationMessage));
 
-        // Assuming existing state update logic
-        setCabDetails((prevCabs) => {
-          // Your previous logic here
-        });
-
-        setFilteredCabs((prevCabs) => {
-          // Your previous logic here
-        });
-
         // Also update the selected driver if this is the one being viewed
         if (selectedDriver && selectedDriver.driver?.id === driver.driver?.id) {
-          setSelectedDriver((prev) => ({
-            ...prev,
-            driver: {
-              ...prev.driver,
-              location: location,
-            },
-          }));
+          setSelectedDriver((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              driver: {
+                ...prev.driver,
+                location: location,
+              },
+            };
+          });
 
           // Update map marker if using Leaflet directly
           if (markerRef.current && mapRef.current) {
@@ -812,8 +790,6 @@ const CabSearch = () => {
     setShowMap(false);
     setSelectedDriver(null);
   };
-
-
 
   const handleSearch = () => {
     setError(null)
@@ -1029,9 +1005,6 @@ const CabSearch = () => {
             </div>
           </>
         );
-
-
-   
 
       case "otherProblems":
         return (
@@ -1489,4 +1462,3 @@ const CabSearch = () => {
 }
 
 export default CabSearch
-

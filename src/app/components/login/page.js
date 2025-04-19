@@ -1,5 +1,4 @@
 
-
 "use client"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -7,7 +6,7 @@ import { ToastContainer, toast } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import axios from "axios"
 import { motion, AnimatePresence } from "framer-motion"
-import { Eye, EyeOff, X, Car } from "lucide-react"
+import { Eye, EyeOff, X, Car } from 'lucide-react'
 import baseURL from "@/utils/api"
 
 const Login = () => {
@@ -27,7 +26,8 @@ const Login = () => {
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [resetLoading, setResetLoading] = useState(false)
-
+  const [isBlocked, setIsBlocked] = useState(false)
+  const [showModal, setShowModal] = useState(false)
   const router = useRouter()
 
   // Animation variants
@@ -37,7 +37,7 @@ const Login = () => {
     exit: { opacity: 0, y: -20, scale: 0.95 },
   }
 
-  // All your existing handlers remain the same
+  // Handle login
   const handleLogin = async (e) => {
     e.preventDefault()
     setLoading(true)
@@ -49,10 +49,25 @@ const Login = () => {
       })
 
       if (res.status === 200) {
-        toast.success(res.data.message)
+        // toast.success(res.data.message)
         localStorage.setItem("token", res.data.token)
         localStorage.setItem("id", res.data.id)
-        router.push("/AdminDashboard")
+        
+        // Check if the user is blocked
+        try {
+          const subAdminsRes = await axios.get(`${baseURL}api/admin/getAllSubAdmins`)
+          const loggedInUser = subAdminsRes.data.subAdmins.find((e) => e._id === res.data.id)
+
+          if (loggedInUser?.status === 'Inactive') {
+            setIsBlocked(true)
+            setShowModal(true) 
+          } else {
+            router.push('/AdminDashboard') 
+          }
+        } catch (error) {
+          console.error("Error checking user status:", error)
+          router.push('/AdminDashboard') // Default to dashboard if status check fails
+        }
       }
     } catch (error) {
       toast.error("Invalid credentials or something went wrong.")
@@ -420,6 +435,28 @@ const Login = () => {
             </motion.div>,
             "otp-modal"
           )}
+
+        {/* Blocked Admin Modal */}
+        {showModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="bg-gray-900 text-white p-6 rounded-lg shadow-xl border border-gray-700 w-80"
+            >
+              <h2 className="text-xl font-semibold mb-4">Access Denied</h2>
+              <p className="text-gray-300 mb-4">You have been blocked by the Master Admin.</p>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                className="bg-red-600 hover:bg-red-500 text-white py-2 px-4 rounded-lg w-full"
+                onClick={() => setShowModal(false)}
+              >
+                Close
+              </motion.button>
+            </motion.div>
+          </div>
+        )}
 
         {showResetModal &&
           modalWrapper(

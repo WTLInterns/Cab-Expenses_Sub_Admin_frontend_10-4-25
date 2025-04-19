@@ -1,6 +1,4 @@
-
 "use client";
-
 import { useState, useEffect } from "react";
 import Sidebar from "../slidebar/page";
 import axios from "axios";
@@ -252,8 +250,9 @@ export default function CabService() {
 
         {/* ✅ Receipt Modal */}
         {showReceiptModal && (
-          <div className="fixed inset-0 z-50 bg-opacity-70 flex items-center justify-center p-4 bg-gradient-to-b bg-black/50 to-transparent backdrop-blur-md">
-            <div className="bg-white p-4 rounded-lg">
+           <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+           <div className="bg-white rounded-lg shadow-lg p-4 w-[90%] md:w-[600px] h-[80%] max-h-[90%] overflow-auto relative">
+       
               <h3 className="text-xl font-semibold mb-4">Receipt Image</h3>
               <img
                 src={receiptImage}
