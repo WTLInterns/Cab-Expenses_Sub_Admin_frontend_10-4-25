@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -31,7 +30,7 @@ export default function CabService() {
         axios.get(`${baseURL}api/driver/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        axios.get(`${baseURL}api/cabDetails`, {
+        axios.get(`${baseURL}api/assigncab`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
         axios.get(`${baseURL}api/servicing`, {
@@ -55,15 +54,6 @@ export default function CabService() {
     } catch (error) {
       console.error("Error fetching:", error);
     }
-  };
-
-  const calculateKmTravelled = (meterValues) => {
-    let totalMeters = 0;
-    for (let i = 1; i < meterValues.length; i++) {
-      const diff = meterValues[i] - meterValues[i - 1];
-      if (diff > 0) totalMeters += diff;
-    }
-    return Math.round(totalMeters);
   };
 
   const handleAssignServicing = async () => {
@@ -102,113 +92,99 @@ export default function CabService() {
 
         {/* ✅ Table */}
         <div className="bg-gray-800 rounded-lg shadow p-4 space-y-4">
-  {/* Header - Visible on mobile */}
-  <div className="md:hidden grid grid-cols-2 gap-2 text-sm text-gray-400 font-medium">
-    <div># & Cab No</div>
-    <div>Driver & Status</div>
-  </div>
+          {/* Header - Visible on mobile */}
+          <div className="md:hidden grid grid-cols-2 gap-2 text-sm text-gray-400 font-medium">
+            <div># & Cab No</div>
+            <div>Driver & Status</div>
+          </div>
 
-  {services.map((srv, i) => (
-    <div 
-      key={srv._id} 
-      className="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors duration-200"
-    >
-      {/* Mobile View (2 columns) */}
-      <div className="md:hidden grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400">#</span>
-            <span>{i + 1}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400">Cab No</span>
-            <span>{srv?.cab?.cabNumber || "-"}</span>
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400">Driver</span>
-            <span>{srv?.driver?.name || "-"}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-gray-400">Status</span>
-            <span className="capitalize">{srv.status}</span>
-          </div>
-        </div>
-      </div>
+          {services.map((srv, i) => (
+            <div
+              key={srv._id}
+              className="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors duration-200"
+            >
+              {/* Mobile View (2 columns) */}
+              <div className="md:hidden grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">#</span>
+                    <span>{i + 1}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">Cab No</span>
+                    <span>{srv?.cab?.cabNumber || "-"}</span>
+                  </div>
+                </div>
 
-      {/* Amount and Receipt - Full width on mobile */}
-      <div className="mt-3 md:mt-0">
-        <div className="flex justify-between items-center border-t border-gray-600 pt-3 md:hidden">
-          <span className="text-gray-400">Amount</span>
-          <span>
-            {srv.vehicleServicing?.amount?.length > 0
-              ? srv.vehicleServicing.amount
-                .filter(a => a !== null)
-                .map((amt, idx) => (
-                  <div key={idx}>₹{amt}</div>
-                ))
-              : "-"}
-          </span>
-        </div>
-        
-        <div className="flex justify-between items-center border-t border-gray-600 pt-3 md:hidden">
-          <span className="text-gray-400">Receipt</span>
-          <span>
-            {srv.vehicleServicing?.receiptImage?.length > 0
-              ? srv.vehicleServicing.receiptImage.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      setReceiptImage(img);
-                      setShowReceiptModal(true);
-                    }}
-                    className="text-blue-400 underline hover:text-blue-300 mr-2"
-                  >
-                    View {idx + 1}
-                  </button>
-                ))
-              : "-"}
-          </span>
-        </div>
-      </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">Driver</span>
+                    <span>{srv?.driver?.name || "-"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400">Status</span>
+                    <span className="capitalize">{srv.status}</span>
+                  </div>
+                </div>
+              </div>
 
-      {/* Desktop View (hidden on mobile) */}
-      <div className="hidden md:grid grid-cols-6 gap-4">
-        <div className="text-center">{i + 1}</div>
-        <div className="text-center">{srv?.cab?.cabNumber || "-"}</div>
-        <div className="text-center">{srv?.driver?.name || "-"}</div>
-        <div className="text-center capitalize">{srv.status}</div>
-        <div className="text-center">
-          {srv.vehicleServicing?.amount?.length > 0
-            ? srv.vehicleServicing.amount
-              .filter(a => a !== null)
-              .map((amt, idx) => (
-                <div key={idx}>₹{amt}</div>
-              ))
-            : "-"}
+              {/* Amount and Receipt - Full width on mobile */}
+              <div className="mt-3 md:mt-0">
+                <div className="flex justify-between items-center border-t border-gray-600 pt-3 md:hidden">
+                  <span className="text-gray-400">Amount</span>
+                  <span>
+                    {srv.servicingAmount ? `₹${srv.servicingAmount}` : "-"}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center border-t border-gray-600 pt-3 md:hidden">
+                  <span className="text-gray-400">Receipt</span>
+                  <span>
+                    {srv.receiptImage ? (
+                      <button
+                        onClick={() => {
+                          setReceiptImage(srv.receiptImage);
+                          setShowReceiptModal(true);
+                        }}
+                        className="text-blue-400 underline hover:text-blue-300 mr-2"
+                      >
+                        View Receipt
+                      </button>
+                    ) : (
+                      "-"
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              {/* Desktop View (hidden on mobile) */}
+              <div className="hidden md:grid grid-cols-6 gap-4">
+                <div className="text-center">{i + 1}</div>
+                <div className="text-center">{srv?.cab?.cabNumber || "-"}</div>
+                <div className="text-center">{srv?.driver?.name || "-"}</div>
+                <div className="text-center capitalize">{srv.status}</div>
+                <div className="text-center">
+                  {srv.servicingAmount ? `₹${srv.servicingAmount}` : "-"}
+                </div>
+                <div className="text-center">
+                  {srv.receiptImage ? (
+                    <button
+                      onClick={() => {
+                        setReceiptImage(srv.receiptImage);
+                        setShowReceiptModal(true);
+                      }}
+                      className="text-blue-400 underline hover:text-blue-300 mr-2"
+                    >
+                      View Receipt
+                    </button>
+                  ) : (
+                    "-"
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-        <div className="text-center">
-          {srv.vehicleServicing?.receiptImage?.length > 0
-            ? srv.vehicleServicing.receiptImage.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setReceiptImage(img); 
-                    setShowReceiptModal(true);
-                  }}
-                  className="text-blue-400 underline hover:text-blue-300 mr-2"
-                >
-                  View {idx + 1}
-                </button>
-              ))
-            : "-"}
-        </div>
-      </div>
-    </div>
-  ))}
-</div>
 
         {/* ✅ Assign Modal */}
         {showAssignModal && (
@@ -243,11 +219,11 @@ export default function CabService() {
                 <option value="">-- Select Cab --</option>
                 {cabs
                   .filter((cab) => {
-                    const kmTravelled = calculateKmTravelled(cab.vehicleServicing?.meter || []);
+                    const kmTravelled = calculateKmTravelled(cab.tripDetails?.vehicleServicing?.meter || []);
                     return kmTravelled > 10000;
                   })
                   .map((cab) => {
-                    const kmTravelled = calculateKmTravelled(cab.vehicleServicing?.meter || []);
+                    const kmTravelled = calculateKmTravelled(cab.tripDetails?.vehicleServicing?.meter || []);
                     return (
                       <option key={cab._id} value={cab._id}>
                         {cab.cabNumber} ({kmTravelled} km)
@@ -276,32 +252,38 @@ export default function CabService() {
 
         {/* ✅ Receipt Modal */}
         {showReceiptModal && (
-          <div className="fixed inset-0 z-50  bg-opacity-70 flex items-center justify-center p-4 bg-gradient-to-b bg-black/50 to-transparent backdrop-blur-md">
-            <div className="bg-white p-6 rounded-2xl shadow-2xl relative w-full max-w-sm">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 text-center">
-                Receipt Image
-              </h3>
-              <div className="flex justify-center">
-                <img
-                  src={receiptImage}
-                  alt="Receipt"
-                  className="max-w-xs max-h-[400px] rounded-lg border-4 border-gray-300 shadow-lg"
-                />
+          <div className="fixed inset-0 z-50 bg-opacity-70 flex items-center justify-center p-4 bg-gradient-to-b bg-black/50 to-transparent backdrop-blur-md">
+            <div className="bg-white p-4 rounded-lg">
+              <h3 className="text-xl font-semibold mb-4">Receipt Image</h3>
+              <img
+                src={receiptImage}
+                alt="Receipt"
+                className="w-full max-w-xs mx-auto"
+              />
+              <div className="flex justify-center gap-4 mt-4">
+                <button
+                  onClick={() => setShowReceiptModal(false)}
+                  className="bg-red-600 px-4 py-2 rounded text-white"
+                >
+                  Close
+                </button>
               </div>
-              <button
-                onClick={() => {
-                  setShowReceiptModal(false);
-                  setReceiptImage("");
-                }}
-                className="absolute top-2 right-2 text-red-500 text-xl font-bold hover:text-red-700"
-              >
-                ×
-              </button>
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
 }
+
+// Helper function to calculate km travelled from meter readings
+const calculateKmTravelled = (meterReadings) => {
+  let totalKm = 0;
+  for (let i = 1; i < meterReadings.length; i++) {
+    const diff = meterReadings[i] - meterReadings[i - 1];
+    if (diff > 0) totalKm += diff;
+  }
+  return totalKm / 1000;
+};
+
+
