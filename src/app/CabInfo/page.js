@@ -40,6 +40,7 @@ const CabSearch = () => {
   const [currentDistance, setCurrentDistance] = useState(0)
   const [remainingDistance, setRemainingDistance] = useState(0)
   const [clickedCoordinates, setClickedCoordinates] = useState(null)
+  const[cabData,setCabData]=useState(null)
   // Add state for image modal
   const [imageModalOpen, setImageModalOpen] = useState(false)
   const [selectedImage, setSelectedImage] = useState("")
@@ -220,24 +221,24 @@ const CabSearch = () => {
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
-        const id = localStorage.getItem("id");
-        const res = await axios.get(`${baseURL}api/admin/getAllSubAdmins`);
-        const admin = res.data.subAdmins.find((el) => el._id === id);
+        const id = localStorage.getItem("id")
+        const res = await axios.get(`${baseURL}api/admin/getAllSubAdmins`)
+        const admin = res.data.subAdmins.find((el) => el._id === id)
 
         if (admin) {
-          setCompanyLogo(admin.companyLogo);
-          setSignature(admin.signature);
-          setCompanyName(admin.name);
-          setCompanyInfo(admin.companyInfo);
-          setInvoiceNumber(generateInvoiceNumber(admin.name));
+          setCompanyLogo(admin.companyLogo)
+          setSignature(admin.signature)
+          setCompanyName(admin.name)
+          setCompanyInfo(admin.companyInfo)
+          setInvoiceNumber(generateInvoiceNumber(admin.name))
         }
       } catch (err) {
-        console.error("Failed to fetch admin data:", err);
+        console.error("Failed to fetch admin data:", err)
       }
-    };
+    }
 
-    fetchAdminData();
-  }, [generateInvoiceNumber]);
+    fetchAdminData()
+  }, [generateInvoiceNumber])
 
   useEffect(() => {
     const fetchAssignedCabs = async () => {
@@ -247,7 +248,9 @@ const CabSearch = () => {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         })
 
-        console.log(res.data)
+        console.log("we are in price Array", res.data[0].cab.fastTag.amount)
+        const data = res.data[0].cab
+        setCabData(data)
         setCabDetails(res.data)
         setFilteredCabs(res.data)
         // Fetch route coordinates for all cabs
@@ -255,8 +258,11 @@ const CabSearch = () => {
         const driverRoutesMap = {}
 
         for (const cab of res.data) {
-          if (cab.cab?.location?.from && cab.cab?.location?.to) {
-            const routeData = await fetchRouteCoordinates(cab.cab.location.from, cab.cab.location.to)
+          if (cab.cab?.tripDetails?.location?.from && cab.cab?.tripDetails?.location?.to) {
+            const routeData = await fetchRouteCoordinates(
+              cab.cab.tripDetails.location.from,
+              cab.cab.tripDetails.location.to,
+            )
             if (routeData) {
               routes[cab.cab.cabNumber] = routeData
 
@@ -265,9 +271,9 @@ const CabSearch = () => {
                 driverRoutesMap[cab.driver.id] = {
                   cabNumber: cab.cab.cabNumber,
                   route: routeData,
-                  from: cab.cab.location.from,
-                  to: cab.cab.location.to,
-                  totalDistance: cab.cab.location.totalDistance || "0",
+                  from: cab.cab.tripDetails.location.from,
+                  to: cab.cab.tripDetails.location.to,
+                  totalDistance: cab.cab.tripDetails.location.totalDistance || "0",
                 }
               }
             }
@@ -972,8 +978,7 @@ const CabSearch = () => {
           <>
             <div className="mb-4">
               <p>
-                <span className="text-gray-400">Required Service:</span>{" "}
-                {data.requiredService ? "Yes" : "No"}
+                <span className="text-gray-400">Required Service:</span> {data.requiredService ? "Yes" : "No"}
               </p>
               <p>
                 <span className="text-gray-400">Details:</span> {data.details || "N/A"}
@@ -998,13 +1003,13 @@ const CabSearch = () => {
               {/* Total Service Amount */}
               {data.amount && Array.isArray(data.amount) && data.amount.length > 0 && (
                 <p>
-                  <span className="text-gray-400">Total Amount:</span>{" "}
-                  ₹{data.amount.reduce((acc, curr) => acc + Number(curr || 0), 0)}
+                  <span className="text-gray-400">Total Amount:</span> ₹
+                  {data.amount.reduce((acc, curr) => acc + Number(curr || 0), 0)}
                 </p>
               )}
             </div>
           </>
-        );
+        )
 
       case "otherProblems":
         return (
@@ -1025,38 +1030,8 @@ const CabSearch = () => {
             </div>
           </>
         )
-
-      default:
-        return (
-          <div className="space-y-3">
-            {Object.entries(data || {}).map(([key, value]) => (
-              <div key={key} className="border-b border-gray-700 pb-2">
-                <p className="text-gray-400 capitalize">{key.replace(/([A-Z])/g, " $1").trim()}:</p>
-                {Array.isArray(value) ? (
-                  key.toLowerCase().includes("image") ? (
-                    renderImageGallery(value)
-                  ) : (
-                    <p className="text-white break-words">{value.filter((v) => v !== null).join(", ") || "N/A"}</p>
-                  )
-                ) : typeof value === "string" && value.match(/\.(jpeg|jpg|gif|png)$/) ? (
-                  <div className="mt-2 cursor-pointer" onClick={() => openImageModal(value)}>
-                    <Image
-                      src={value || "/placeholder.svg"}
-                      alt={key}
-                      width={200}
-                      height={400}
-                      className="w-full h-auto rounded border border-gray-600 hover:border-blue-500 transition-all"
-                    />
-                  </div>
-                ) : (
-                  <p className="text-white break-words">{value?.toString() || "N/A"}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        )
+      }
     }
-  }
 
   return (
     <div className="flex min-h-screen bg-gray-800">
@@ -1208,6 +1183,7 @@ const CabSearch = () => {
                           <PDFDownloadLink
                             document={
                               <InvoicePDF
+                              cabData={cabData}
                                 trip={item}
                                 companyLogo={companyLogo}
                                 signature={signature}
@@ -1462,3 +1438,43 @@ const CabSearch = () => {
 }
 
 export default CabSearch
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

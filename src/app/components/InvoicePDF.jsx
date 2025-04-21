@@ -1,7 +1,3 @@
-
-
-
-
 import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer"
 import { toWords } from "number-to-words"
 
@@ -134,7 +130,76 @@ const numberToWords = (amount) => {
   }
 }
 
+// Helper function to safely extract and sum amounts from various possible locations
+const extractAmounts = (data, paths) => {
+  if (!data) return 0
+
+  // Try each possible path to find the amount data
+  for (const path of paths) {
+    const parts = path.split(".")
+    let current = data
+
+    // Navigate through the object path
+    for (const part of parts) {
+      if (!current || typeof current !== "object") {
+        current = null
+        break
+      }
+      current = current[part]
+    }
+
+    // If we found an array of amounts, sum them
+    if (Array.isArray(current)) {
+      // Convert each item to a number, handling string formatting
+      const sum = current.reduce((sum, amt) => {
+        if (amt === null || amt === undefined) return sum
+        
+        // If it's a string with currency symbols or commas, clean it up
+        if (typeof amt === 'string') {
+          // Remove currency symbols, commas, and other non-numeric characters except decimal point
+          const cleanedAmount = amt.replace(/[^\d.-]/g, '')
+          return sum + (Number(cleanedAmount) || 0)
+        }
+        
+        return sum + (Number(amt) || 0)
+      }, 0)
+      
+      if (sum > 0) return sum
+    }
+    // If we found a single amount, return it
+    else if (current !== undefined && current !== null) {
+      if (typeof current === 'string') {
+        // Remove currency symbols, commas, and other non-numeric characters except decimal point
+        const cleanedAmount = current.replace(/[^\d.-]/g, '')
+        return Number(cleanedAmount) || 0
+      }
+      return Number(current) || 0
+    }
+  }
+
+  return 0
+}
+
+// Function to directly access a nested property using a path string
+const getNestedValue = (obj, path) => {
+  if (!obj || !path) return undefined
+  
+  const parts = path.split('.')
+  let current = obj
+  
+  for (const part of parts) {
+    if (current === null || current === undefined || typeof current !== 'object') {
+      return undefined
+    }
+    current = current[part]
+  }
+  
+  return current
+}
+
+
 const InvoicePDF = ({
+  cabData,
   trip,
   cabExpense,
   companyLogo,
@@ -145,7 +210,14 @@ const InvoicePDF = ({
   companyName,
   invoiceDate,
 }) => {
-  if (!trip || !trip.cab) return null
+  if (!trip) return null
+
+  // Debug the data structure
+  console.log("INVOICE DATA:", {
+    tripData: trip,
+    cabData: cabData,
+    cabExpense: cabExpense,
+  })
 
   // First try to use the cabExpense data from the API if available
   let fuelAmount = 0
@@ -153,36 +225,231 @@ const InvoicePDF = ({
   let tyreAmount = 0
   let otherAmount = 0
 
-  if (cabExpense && cabExpense.breakdown) {
-    // Use the expense data from the API
-    fuelAmount = Number(cabExpense.breakdown.fuel || 0)
-    fastTagAmount = Number(cabExpense.breakdown.fastTag || 0)
-    tyreAmount = Number(cabExpense.breakdown.tyrePuncture || 0)
-    otherAmount = Number(cabExpense.breakdown.otherProblems || 0)
-  } else {
-    // Fall back to calculating from the trip data
-    // Safely extract amounts with fallbacks to 0
-    fuelAmount = Array.isArray(trip?.cab?.fuel?.amount)
-      ? trip.cab.fuel.amount.reduce((sum, amt) => sum + (Number(amt) || 0), 0)
-      : Number(trip?.cab?.fuel?.amount || 0)
-
-    fastTagAmount = Array.isArray(trip?.cab?.fastTag?.amount)
-      ? trip.cab.fastTag.amount.reduce((sum, amt) => sum + (Number(amt) || 0), 0)
-      : Number(trip?.cab?.fastTag?.amount || 0)
-
-    tyreAmount = Array.isArray(trip?.cab?.tyrePuncture?.repairAmount)
-      ? trip.cab.tyrePuncture.repairAmount.reduce((sum, amt) => sum + (Number(amt) || 0), 0)
-      : Number(trip?.cab?.tyrePuncture?.repairAmount || 0)
-
-    otherAmount = Array.isArray(trip?.cab?.otherProblems?.amount)
-      ? trip.cab.otherProblems.amount.reduce((sum, amt) => sum + (Number(amt) || 0), 0)
-      : Number(trip?.cab?.otherProblems?.amount || 0)
+  // Direct access to specific paths that might contain the amounts
+  // For fuel amount
+  const directFuelPaths = [
+    'cab.fuel.amount',
+    'tripDetails.fuel.amount',
+    'fuel.amount'
+  ]
+  
+  // Try to find fuel amount directly in the trip object
+  for (const path of directFuelPaths) {
+    const value = getNestedValue(trip, path)
+    if (value) {
+      console.log(`Found fuel amount at ${path}:`, value)
+      if (Array.isArray(value)) {
+        fuelAmount = value.reduce((sum, amt) => {
+          if (typeof amt === 'string') {
+            // Clean the string value
+            const cleanedAmount = amt.replace(/[^\d.-]/g, '')
+            return sum + (Number(cleanedAmount) || 0)
+          }
+          return sum + (Number(amt) || 0)
+        }, 0)
+      } else if (typeof value === 'string') {
+        fuelAmount = Number(value.replace(/[^\d.-]/g, '')) || 0
+      } else {
+        fuelAmount = Number(value) || 0
+      }
+      
+      if (fuelAmount > 0) break
+    }
   }
+  
+
+
+  /**
+   * 
+   */
+  // If not found in trip, try cabData
+  if (fuelAmount === 0 && cabData && cabData.fuel && cabData.fuel.amount) {
+    const value = cabData.fuel.amount
+    console.log("Found fuel amount in cabData:", value)
+    if (Array.isArray(value)) {
+      fuelAmount = value.reduce((sum, amt) => {
+        if (typeof amt === 'string') {
+          const cleanedAmount = amt.replace(/[^\d.-]/g, '')
+          return sum + (Number(cleanedAmount) || 0)
+        }
+        return sum + (Number(amt) || 0)
+      }, 0)
+    } else if (typeof value === 'string') {
+      fuelAmount = Number(value.replace(/[^\d.-]/g, '')) || 0
+    } else {
+      fuelAmount = Number(value) || 0
+    }
+  }
+
+  // For FastTag amount
+  const directFastTagPaths = [
+    'cab.fastTag.amount',
+    'tripDetails.fastTag.amount',
+    'fastTag.amount'
+  ]
+  
+  // Try to find FastTag amount directly
+  for (const path of directFastTagPaths) {
+    const value = getNestedValue(trip, path)
+    if (value) {
+      console.log(`Found FastTag amount at ${path}:`, value)
+      if (Array.isArray(value)) {
+        fastTagAmount = value.reduce((sum, amt) => {
+          if (typeof amt === 'string') {
+            const cleanedAmount = amt.replace(/[^\d.-]/g, '')
+            return sum + (Number(cleanedAmount) || 0)
+          }
+          return sum + (Number(amt) || 0)
+        }, 0)
+      } else if (typeof value === 'string') {
+        fastTagAmount = Number(value.replace(/[^\d.-]/g, '')) || 0
+      } else {
+        fastTagAmount = Number(value) || 0
+      }
+      
+      if (fastTagAmount > 0) break
+    }
+  }
+  
+  // If not found in trip, try cabData
+  if (fastTagAmount === 0 && cabData && cabData.fastTag && cabData.fastTag.amount) {
+    const value = cabData.fastTag.amount
+    console.log("Found FastTag amount in cabData:", value)
+    if (Array.isArray(value)) {
+      fastTagAmount = value.reduce((sum, amt) => {
+        if (typeof amt === 'string') {
+          const cleanedAmount = amt.replace(/[^\d.-]/g, '')
+          return sum + (Number(cleanedAmount) || 0)
+        }
+        return sum + (Number(amt) || 0)
+      }, 0)
+    } else if (typeof value === 'string') {
+      fastTagAmount = Number(value.replace(/[^\d.-]/g, '')) || 0
+    } else {
+      fastTagAmount = Number(value) || 0
+    }
+  }
+
+  // For Tyre amount
+  const directTyrePaths = [
+    'cab.tyrePuncture.repairAmount',
+    'tripDetails.tyrePuncture.repairAmount',
+    'tyrePuncture.repairAmount'
+  ]
+  
+  // Try to find tyre amount directly
+  for (const path of directTyrePaths) {
+    const value = getNestedValue(trip, path)
+    if (value) {
+      console.log(`Found tyre amount at ${path}:`, value)
+      if (Array.isArray(value)) {
+        tyreAmount = value.reduce((sum, amt) => {
+          if (typeof amt === 'string') {
+            const cleanedAmount = amt.replace(/[^\d.-]/g, '')
+            return sum + (Number(cleanedAmount) || 0)
+          }
+          return sum + (Number(amt) || 0)
+        }, 0)
+      } else if (typeof value === 'string') {
+        tyreAmount = Number(value.replace(/[^\d.-]/g, '')) || 0
+      } else {
+        tyreAmount = Number(value) || 0
+      }
+      
+      if (tyreAmount > 0) break
+    }
+  }
+  
+  // If not found in trip, try cabData
+  if (tyreAmount === 0 && cabData && cabData.tyrePuncture && cabData.tyrePuncture.repairAmount) {
+    const value = cabData.tyrePuncture.repairAmount
+    console.log("Found tyre amount in cabData:", value)
+    if (Array.isArray(value)) {
+      tyreAmount = value.reduce((sum, amt) => {
+        if (typeof amt === 'string') {
+          const cleanedAmount = amt.replace(/[^\d.-]/g, '')
+          return sum + (Number(cleanedAmount) || 0)
+        }
+        return sum + (Number(amt) || 0)
+      }, 0)
+    } else if (typeof value === 'string') {
+      tyreAmount = Number(value.replace(/[^\d.-]/g, '')) || 0
+    } else {
+      tyreAmount = Number(value) || 0
+    }
+  }
+
+  // For Other Problems amount
+  const directOtherPaths = [
+    'cab.otherProblems.amount',
+    'tripDetails.otherProblems.amount',
+    'otherProblems.amount'
+  ]
+  
+  // Try to find other problems amount directly
+  for (const path of directOtherPaths) {
+    const value = getNestedValue(trip, path)
+    if (value) {
+      console.log(`Found other problems amount at ${path}:`, value)
+      if (Array.isArray(value)) {
+        otherAmount = value.reduce((sum, amt) => {
+          if (typeof amt === 'string') {
+            const cleanedAmount = amt.replace(/[^\d.-]/g, '')
+            return sum + (Number(cleanedAmount) || 0)
+          }
+          return sum + (Number(amt) || 0)
+        }, 0)
+      } else if (typeof value === 'string') {
+        otherAmount = Number(value.replace(/[^\d.-]/g, '')) || 0
+      } else {
+        otherAmount = Number(value) || 0
+      }
+      
+      if (otherAmount > 0) break
+    }
+  }
+  
+  // If not found in trip, try cabData
+  if (otherAmount === 0 && cabData && cabData.otherProblems && cabData.otherProblems.amount) {
+    const value = cabData.otherProblems.amount
+    console.log("Found other problems amount in cabData:", value)
+    if (Array.isArray(value)) {
+      otherAmount = value.reduce((sum, amt) => {
+        if (typeof amt === 'string') {
+          const cleanedAmount = amt.replace(/[^\d.-]/g, '')
+          return sum + (Number(cleanedAmount) || 0)
+        }
+        return sum + (Number(amt) || 0)
+      }, 0)
+    } else if (typeof value === 'string') {
+      otherAmount = Number(value.replace(/[^\d.-]/g, '')) || 0
+    } else {
+      otherAmount = Number(value) || 0
+    }
+  }
+
+  // Log the extracted amounts for debugging
+  console.log("Extracted Amounts:", {
+    fuelAmount,
+    fastTagAmount,
+    tyreAmount,
+    otherAmount,
+  })
 
   const subtotal = fuelAmount + fastTagAmount + tyreAmount + otherAmount
   const gst = subtotal * 0.05
   const totalAmount = subtotal + gst
 
+  // Format number with commas for Indian numbering system (e.g., 1,00,000)
+  const formatIndianNumber = (num) => {
+    console.log("my fuel payment is null",num)
+    console.log("my fuel isNan",isNaN(num))
+    if (num == null  || isNaN(Number(num))) return '0.00';
+    const parts = num.toFixed(2).split('.')
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    return parts.join('.')
+  }
+ 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -238,31 +505,31 @@ const InvoicePDF = ({
 
         <View style={styles.tableRow}>
           <Text style={styles.tableCell}>Fuel</Text>
-          <Text style={styles.tableAmount}>{fuelAmount.toFixed(2)}</Text>
+          <Text style={styles.tableAmount}>₹{formatIndianNumber(fuelAmount)}</Text>
         </View>
         <View style={styles.tableRow}>
           <Text style={styles.tableCell}>FastTag</Text>
-          <Text style={styles.tableAmount}>{fastTagAmount.toFixed(2)}</Text>
+          <Text style={styles.tableAmount}>₹{formatIndianNumber(fastTagAmount)}</Text>
         </View>
         <View style={styles.tableRow}>
           <Text style={styles.tableCell}>Tyre Puncture</Text>
-          <Text style={styles.tableAmount}>{tyreAmount.toFixed(2)}</Text>
+          <Text style={styles.tableAmount}>₹{formatIndianNumber(tyreAmount)}</Text>
         </View>
         <View style={styles.tableRow}>
           <Text style={styles.tableCell}>Other Problems</Text>
-          <Text style={styles.tableAmount}>{otherAmount.toFixed(2)}</Text>
+          <Text style={styles.tableAmount}>₹{formatIndianNumber(otherAmount)}</Text>
         </View>
 
         <View style={styles.rowDivider} />
 
         <View style={styles.tableRow}>
           <Text style={[styles.tableCell, { fontWeight: "bold" }]}>Subtotal</Text>
-          <Text style={styles.tableAmount}>{subtotal.toFixed(2)}</Text>
+          <Text style={styles.tableAmount}>₹{formatIndianNumber(subtotal)}</Text>
         </View>
 
         <View style={styles.tableRow}>
           <Text style={[styles.tableCell, { fontWeight: "bold" }]}>GST (5%)</Text>
-          <Text style={styles.tableAmount}>{gst.toFixed(2)}</Text>
+          <Text style={styles.tableAmount}>₹{formatIndianNumber(gst)}</Text>
         </View>
 
         <View style={styles.rowDivider} />
@@ -271,7 +538,7 @@ const InvoicePDF = ({
           <Text style={styles.totalWords}>
             <Text style={{ fontWeight: "bold", fontStyle: "italic" }}>{numberToWords(totalAmount)}</Text>
           </Text>
-          <Text style={styles.totalNumber}>{totalAmount.toFixed(2)}</Text>
+          <Text style={styles.totalNumber}>₹{formatIndianNumber(totalAmount)}</Text>
         </View>
 
         <View style={styles.footer}>
