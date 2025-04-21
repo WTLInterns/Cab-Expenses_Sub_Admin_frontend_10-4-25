@@ -9,6 +9,7 @@ import LeafletMap from "../components/LeafletMap";
 import baseURL from "@/utils/api";
 import Image from 'next/image';
 
+
 // Create a driver location storage
 const driverLocations = {};
 
@@ -334,7 +335,7 @@ const CabSearch = () => {
 
   // Calculate distance between two points in kilometers
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Radius of the earth in km
+    const R = 6371; 
     const dLat = deg2rad(lat2 - lat1);
     const dLon = deg2rad(lon2 - lon1);
     const a =

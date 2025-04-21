@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@react-google-maps/api": "^2.20.6",
@@ -36,7 +37,9 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^9",
     "eslint-config-next": "15.2.1",
+    "patch-package": "^8.0.0",
     "postcss": "^8.5.3",
+    "postinstall-postinstall": "^2.1.0",
     "tailwindcss": "^4.0.9"
   }
 }

@@ -257,12 +257,6 @@ const InvoicePDF = ({
     }
   }
   
-
-
-  /**
-   * 
-   */
-  // If not found in trip, try cabData
   if (fuelAmount === 0 && cabData && cabData.fuel && cabData.fuel.amount) {
     const value = cabData.fuel.amount
     console.log("Found fuel amount in cabData:", value)
