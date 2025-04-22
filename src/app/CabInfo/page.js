@@ -353,93 +353,136 @@ const CabSearch = () => {
     return deg * (Math.PI / 180);
   };
 
-  useEffect(() => {
-    // Connect to WebSocket server
-    const connectWebSocket = () => {
-      if (wsRef.current) {
-        console.log("WebSocket connection already exists");
-        return;
-      }
+  // useEffect(() => {
+  //   // Connect to WebSocket server
+  //   const connectWebSocket = () => {
+  //     if (wsRef.current) {
+  //       console.log("WebSocket connection already exists");
+  //       return;
+  //     }
 
-      try {
-        const wsUrl = "ws://localhost:5000"; // Update with your WebSocket server URL
-        console.log("Connecting to WebSocket server at:", wsUrl);
-        wsRef.current = new WebSocket(wsUrl);
+  //     try {
+  //       const wsUrl = "wss://localhost:5000"; // Update with your WebSocket server URL
+  //       console.log("Connecting to WebSocket server at:", wsUrl);
+  //       wsRef.current = new WebSocket(wsUrl);
 
-        wsRef.current.onopen = () => {
-          console.log("WebSocket connection established");
-          setWsConnected(true);
+  //       wsRef.current.onopen = () => {
+  //         console.log("WebSocket connection established");
+  //         setWsConnected(true);
 
-          // Register as admin
-          wsRef.current.send(
-            JSON.stringify({
-              type: "register",
-              role: "admin",
-              driverId: adminId.current,
-            })
-          );
-        };
+  //         // Register as admin
+  //         wsRef.current.send(
+  //           JSON.stringify({
+  //             type: "register",
+  //             role: "admin",
+  //             driverId: adminId.current,
+  //           })
+  //         );
+  //       };
 
-        wsRef.current.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            console.log("WebSocket message received:", data);
+  //       wsRef.current.onmessage = (event) => {
+  //         try {
+  //           const data = JSON.parse(event.data);
+  //           console.log("WebSocket message received:", data);
 
-            if (data.type === "location") {
-              console.log("helloo");
+  //           if (data.type === "location") {
+  //             console.log("helloo");
 
-              setSelectedDriver((prev) => {
-                if (!prev) return prev;
-                return {
-                  ...prev,
-                  driver: {
-                    ...prev.driver,
-                    location: {
-                      latitude: data.location.latitude,
-                      longitude: data.location.longitude,
-                      timestamp: data.location.timestamp || new Date().toISOString(),
-                    },
-                  },
-                };
-              });
-            }
-          } catch (error) {
-            console.error("Error parsing WebSocket message:", error);
-          }
-        };
+  //             setSelectedDriver((prev) => {
+  //               if (!prev) return prev;
+  //               return {
+  //                 ...prev,
+  //                 driver: {
+  //                   ...prev.driver,
+  //                   location: {
+  //                     latitude: data.location.latitude,
+  //                     longitude: data.location.longitude,
+  //                     timestamp: data.location.timestamp || new Date().toISOString(),
+  //                   },
+  //                 },
+  //               };
+  //             });
+  //           }
+  //         } catch (error) {
+  //           console.error("Error parsing WebSocket message:", error);
+  //         }
+  //       };
 
-        wsRef.current.onclose = () => {
-          console.log("WebSocket connection closed");
-          setWsConnected(false);
-          wsRef.current = null;
+  //       wsRef.current.onclose = () => {
+  //         console.log("WebSocket connection closed");
+  //         setWsConnected(false);
+  //         wsRef.current = null;
 
-          // Try to reconnect after a delay
-          setTimeout(() => {
-            connectWebSocket();
-          }, 5000);
-        };
+  //         // Try to reconnect after a delay
+  //         setTimeout(() => {
+  //           connectWebSocket();
+  //         }, 5000);
+  //       };
 
-        wsRef.current.onerror = (error) => {
-          console.error("WebSocket error:", error);
-          setWsConnected(false);
-        };
-      } catch (error) {
-        console.error("Error connecting to WebSocket:", error);
-        setWsConnected(false);
-      }
-    };
+  //       wsRef.current.onerror = (error) => {
+  //         console.error("WebSocket error:", error);
+  //         setWsConnected(false);
+  //       };
+  //     } catch (error) {
+  //       console.error("Error connecting to WebSocket:", error);
+  //       setWsConnected(false);
+  //     }
+  //   };
 
-    connectWebSocket();
+  //   connectWebSocket();
 
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
-      }
-    };
-  }, []);
+  //   return () => {
+  //     if (wsRef.current) {
+  //       wsRef.current.close();
+  //       wsRef.current = null;
+  //     }
+  //   };
+  // }, []);
 
   // Initialize map when showing it and Leaflet is loaded
+  
+  useEffect(() => {
+    if (typeof window === 'undefined') return; // Skip on server-side
+  
+    const connectWebSocket = () => {
+      if (wsRef.current) return;
+  
+      const wsUrl = "wss://api.expengo.com";
+      console.log("Connecting to WebSocket:", wsUrl);
+      wsRef.current = new WebSocket(wsUrl);
+  
+      wsRef.current.onopen = () => {
+        console.log("WebSocket connected");
+        setWsConnected(true);
+        wsRef.current.send(JSON.stringify({
+          type: "register",
+          role: "admin",
+          driverId: adminId.current,
+        }));
+      };
+  
+      wsRef.current.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        setWsConnected(false);
+        wsRef.current = null;
+        setTimeout(connectWebSocket, 5000); // Retry
+      };
+  
+      wsRef.current.onclose = () => {
+        console.log("WebSocket disconnected");
+        setWsConnected(false);
+        wsRef.current = null;
+        setTimeout(connectWebSocket, 5000); // Retry
+      };
+    };
+  
+    connectWebSocket();
+  
+    return () => {
+      if (wsRef.current) wsRef.current.close();
+    };
+  }, []);
+  
   useEffect(() => {
     if (showMap && selectedDriver && mapLoaded) {
       initializeMap();
